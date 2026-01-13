@@ -1,5 +1,5 @@
 
-const GHL_API_KEY = "pit-5b503571-bfce-4a19-a8fc-45d68ffe5a68";
+const GHL_API_KEY = import.meta.env.VITE_GHL_API_KEY;
 
 export const createContact = async (contactData) => {
     console.log("Syncing with GHL...", contactData);
