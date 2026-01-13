@@ -55,34 +55,48 @@ const Modal = ({ program, onClose }) => {
     );
 };
 
+// Helper to handle bolding in summary text
+const BoldText = ({ text }) => {
+    if (!text) return null;
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return (
+        <span>
+            {parts.map((part, i) =>
+                part.startsWith('**') && part.endsWith('**')
+                    ? <strong key={i} style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>{part.slice(2, -2)}</strong>
+                    : part
+            )}
+        </span>
+    );
+};
+
 const ProgramPodium = ({ recommendations }) => {
     const [selectedProgram, setSelectedProgram] = useState(recommendations.scores[0]);
     const [modalProgram, setModalProgram] = useState(null);
 
-    // Sort logic for 5-wide centered podium
-    // Original: [1, 2, 3, 4, 5]
-    // Reordered: [4, 2, 1, 3, 5]
     const original = recommendations.scores;
     const podiumOrder = [original[3], original[1], original[0], original[2], original[4]].filter(Boolean);
 
     return (
-        <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
             {/* Header Instructions */}
-            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
                 <h2 style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: '32px',
-                    marginBottom: '12px',
+                    fontSize: '48px',
+                    lineHeight: '56px',
+                    marginBottom: '16px',
                     color: 'var(--color-text-primary)'
                 }}>Your Personalized Recommendations</h2>
                 <p style={{
-                    fontSize: '16px',
-                    color: 'var(--color-text-secondary)',
-                    maxWidth: '600px',
-                    margin: '0 auto'
+                    fontSize: '18px',
+                    lineHeight: '28px',
+                    color: 'black', // Pure black for summary as requested previously
+                    maxWidth: '800px',
+                    margin: '0 auto',
+                    fontWeight: 400
                 }}>
-                    Based on your goals and experience, we recommend the **{original[0].program}** program.
-                    However, feel free to explore and choose the style that interests you most.
+                    <BoldText text={`Based on your goals and experience, we recommend the **${original[0].program}** program. However, feel free to explore and choose the style that interests you most.`} />
                 </p>
             </div>
 
@@ -92,12 +106,12 @@ const ProgramPodium = ({ recommendations }) => {
                 flexWrap: 'wrap',
                 justifyContent: 'center',
                 alignItems: 'stretch',
-                gap: '16px',
+                gap: '20px',
+                marginBottom: '64px',
                 padding: '0 20px',
-                maxWidth: '100%',
-                margin: '0 auto 48px'
+                maxWidth: '100%'
             }} className="podium-grid">
-                {podiumOrder.map((program, index) => {
+                {podiumOrder.map((program) => {
                     const isWinner = program.program === original[0].program;
                     const isSelected = selectedProgram?.program === program.program;
                     const rank = original.findIndex(p => p.program === program.program) + 1;
@@ -108,10 +122,10 @@ const ProgramPodium = ({ recommendations }) => {
                             onClick={() => setSelectedProgram(program)}
                             className={`glass-card fade-in-up ${isWinner ? 'winner-card' : ''}`}
                             style={{
-                                flex: '1 1 180px',
-                                minWidth: '160px',
-                                maxWidth: '220px',
-                                padding: '24px 16px',
+                                flex: '1 1 200px',
+                                minWidth: '180px',
+                                maxWidth: '240px',
+                                padding: '32px 20px',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
@@ -121,46 +135,60 @@ const ProgramPodium = ({ recommendations }) => {
                                 position: 'relative',
                                 background: isSelected ? 'rgba(255, 255, 255, 0.95)' : 'var(--color-card-bg)',
                                 border: isWinner ? '2px solid var(--color-primary)' : (isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-border)'),
-                                transform: isSelected ? 'scale(1.05) translateY(-8px)' : 'scale(1)',
-                                boxShadow: isWinner ? '0 10px 40px rgba(1, 117, 89, 0.2)' : undefined,
+                                transform: isSelected ? 'scale(1.04) translateY(-8px)' : 'scale(1)',
+                                boxShadow: isWinner ? '0 15px 45px rgba(1, 117, 89, 0.15)' : '0 10px 30px rgba(0,0,0,0.06)',
                                 zIndex: isSelected ? 2 : 1,
-                                minHeight: isWinner ? '280px' : '240px'
+                                minHeight: isWinner ? '320px' : '280px'
                             }}
                         >
                             {isWinner && (
                                 <div style={{
                                     position: 'absolute',
-                                    top: '-12px',
+                                    top: '-14px',
                                     background: 'var(--color-primary)',
                                     color: 'white',
-                                    padding: '4px 12px',
+                                    padding: '6px 14px',
                                     borderRadius: '12px',
-                                    fontSize: '10px',
+                                    fontSize: '11px',
                                     fontWeight: 700,
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em',
-                                    whiteSpace: 'nowrap'
-                                }}>Best Match</div>
+                                    whiteSpace: 'nowrap',
+                                    boxShadow: '0 4px 10px rgba(1, 117, 89, 0.3)'
+                                }}>Recommended</div>
                             )}
 
                             <div style={{
                                 fontSize: '14px',
                                 color: isWinner ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
-                                fontWeight: 700
+                                fontWeight: 700,
+                                letterSpacing: '0.1em'
                             }}>0{rank}</div>
 
                             <div style={{
-                                fontSize: '18px',
-                                fontWeight: 600,
+                                fontSize: '22px',
+                                fontWeight: 700,
                                 textAlign: 'center',
-                                color: isSelected ? '#000' : 'var(--color-text-primary)'
+                                fontFamily: 'var(--font-heading)', // Playfair Display
+                                color: isSelected ? '#000' : 'var(--color-text-primary)',
+                                margin: '16px 0 auto'
                             }}>{program.program}</div>
 
                             <div style={{
-                                fontSize: isWinner ? '36px' : '28px',
+                                fontSize: isWinner ? '40px' : '32px',
                                 fontWeight: 800,
-                                color: isWinner || isSelected ? 'var(--color-primary)' : 'var(--color-text-secondary)'
+                                color: isWinner || isSelected ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                                marginTop: '24px'
                             }}>{program.score}%</div>
+
+                            <div style={{
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                color: 'var(--color-text-tertiary)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                                marginBottom: '16px'
+                            }}>Match Score</div>
 
                             <button
                                 onClick={(e) => {
@@ -171,14 +199,13 @@ const ProgramPodium = ({ recommendations }) => {
                                     background: 'none',
                                     border: 'none',
                                     color: 'var(--color-primary)',
-                                    fontSize: '12px',
+                                    fontSize: '13px',
                                     fontWeight: 600,
                                     textDecoration: 'underline',
-                                    cursor: 'pointer',
-                                    marginTop: '8px'
+                                    cursor: 'pointer'
                                 }}
                             >
-                                More Info
+                                Why this?
                             </button>
                         </div>
                     );
@@ -190,13 +217,16 @@ const ProgramPodium = ({ recommendations }) => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '16px'
+                gap: '20px',
+                paddingBottom: '80px'
             }}>
                 <button className="btn-primary" style={{
                     width: '100%',
-                    maxWidth: '400px',
-                    height: '64px',
-                    fontSize: '18px'
+                    maxWidth: '450px',
+                    height: '72px',
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    boxShadow: '0 20px 40px rgba(1, 117, 89, 0.2)'
                 }}>
                     Start {selectedProgram?.program} Program
                 </button>
@@ -206,12 +236,13 @@ const ProgramPodium = ({ recommendations }) => {
                         background: 'none',
                         border: 'none',
                         color: 'var(--color-text-tertiary)',
-                        fontSize: '14px',
+                        fontSize: '15px',
                         textDecoration: 'underline',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        opacity: 0.8
                     }}
                 >
-                    Retake Assessment
+                    Retake fitness assessment
                 </button>
             </div>
 

@@ -110,6 +110,7 @@ function App() {
             onBack={handleBack}
             canGoBack={currentQuestionIndex > 0}
             userName={user?.firstName}
+            showGreeting={currentQuestionIndex === 0}
           />
         </div>
       )}

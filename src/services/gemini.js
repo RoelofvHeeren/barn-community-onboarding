@@ -1,4 +1,4 @@
-const GEMINI_API_KEY = "AIzaSyDIMZHtvcoRI-jT8dtKOXJULt0SGIQOyn4";
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 const PROGRAMS = [
     "Fat Loss",
