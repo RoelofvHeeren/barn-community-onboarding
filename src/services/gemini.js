@@ -58,10 +58,11 @@ export const analyzeProfile = async (answers) => {
 
     } catch (error) {
         console.error("Gemini API Error:", error);
-        // Fallback Mock if API fails
+        // Fallback Mock if API fails - showing error for debugging
+        const errorMessage = error.message || "Unknown Error";
         return {
-            summary: "Could not analyze profile. Defaulting to Lifestyle.",
-            scores: PROGRAMS.map(p => ({ program: p, score: 50, reason: "API Error" }))
+            summary: `System Diagnosis: The AI could not run because of the following error: "${errorMessage}". Please check your API Key configuration.`,
+            scores: PROGRAMS.map(p => ({ program: p, score: 50, reason: `Debug Error: ${errorMessage}` }))
         };
     }
 };
