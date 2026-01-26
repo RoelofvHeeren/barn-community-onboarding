@@ -4,8 +4,28 @@ const Modal = ({ program, onClose }) => {
     if (!program) return null;
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={onClose} style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px',
+            backdropFilter: 'blur(5px)'
+        }}>
+            <div className="modal-content fade-in-up" onClick={e => e.stopPropagation()} style={{
+                background: 'white',
+                borderRadius: '24px',
+                padding: '40px',
+                maxWidth: '600px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                position: 'relative',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+            }}>
                 <button
                     onClick={onClose}
                     style={{
@@ -16,26 +36,63 @@ const Modal = ({ program, onClose }) => {
                         border: 'none',
                         fontSize: '24px',
                         cursor: 'pointer',
-                        color: 'var(--color-text-tertiary)'
+                        color: 'var(--color-text-tertiary)',
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'background 0.2s'
                     }}
+                    onMouseOver={e => e.currentTarget.style.background = '#f3f4f6'}
+                    onMouseOut={e => e.currentTarget.style.background = 'none'}
                 >✕</button>
 
+                <div style={{
+                    width: '100%',
+                    height: '200px',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    marginBottom: '24px'
+                }}>
+                    <img
+                        src={`/programs/${program.slug || 'placeholder'}.png`}
+                        alt={program.program}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                        }}
+                    />
+                </div>
+
                 <h3 style={{
-                    fontSize: '28px',
+                    fontSize: '32px',
                     fontFamily: 'var(--font-heading)',
-                    color: 'var(--color-primary)',
-                    marginBottom: '16px'
+                    color: 'var(--color-text-primary)',
+                    marginBottom: '8px',
+                    lineHeight: '1.2'
                 }}>{program.program}</h3>
 
                 <div style={{
-                    fontSize: '48px',
-                    fontWeight: 800,
-                    color: 'var(--color-primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
                     marginBottom: '24px'
-                }}>{program.score}% Match</div>
+                }}>
+                    <div style={{
+                        background: 'var(--color-primary)',
+                        color: 'white',
+                        padding: '6px 16px',
+                        borderRadius: '100px',
+                        fontWeight: 700,
+                        fontSize: '14px'
+                    }}>{program.score}% Match</div>
+                </div>
 
                 <p style={{
-                    fontSize: '16px',
+                    fontSize: '18px',
                     lineHeight: '1.6',
                     color: 'var(--color-text-secondary)',
                     marginBottom: '32px'
@@ -46,213 +103,225 @@ const Modal = ({ program, onClose }) => {
                 <button
                     className="btn-primary"
                     onClick={onClose}
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', height: '56px', fontSize: '18px' }}
                 >
-                    Got it
+                    Close
                 </button>
             </div>
         </div>
     );
 };
 
-const BoldText = ({ text }) => {
-    if (!text) return null;
-    const parts = text.split(/(\*\*.*?\*\*)/g);
-    return (
-        <span>
-            {parts.map((part, i) =>
-                part.startsWith('**') && part.endsWith('**')
-                    ? <strong key={part + i} style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>{part.slice(2, -2)}</strong>
-                    : part
-            )}
-        </span>
-    );
-};
-
-const ProgramPodium = ({ recommendations }) => {
-    const [selectedProgram, setSelectedProgram] = useState(recommendations.scores[0]);
+const ProgramPodium = ({ recommendations, user }) => {
     const [modalProgram, setModalProgram] = useState(null);
-
-    const original = recommendations.scores;
-    // Perfect Podium Order: [5, 3, 1, 2, 4]
-    // Indices: [4, 2, 0, 1, 3]
-    const podiumOrder = [original[4], original[2], original[0], original[1], original[3]].filter(Boolean);
+    const sortedPrograms = recommendations.scores;
+    const winner = sortedPrograms[0];
+    const runnersUp = sortedPrograms.slice(1);
 
     return (
-        <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
-            {/* Header Instructions */}
-            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto', paddingBottom: '80px' }}>
+
+            {/* Header / Summary */}
+            <div style={{ textAlign: 'center', marginBottom: '64px', maxWidth: '900px', margin: '0 auto 64px' }} className="fade-in-up">
                 <h2 style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 'min(48px, 10vw)',
-                    lineHeight: '1.2',
-                    marginBottom: '16px',
+                    fontSize: 'min(56px, 12vw)',
+                    lineHeight: '1.1',
+                    marginBottom: '24px',
                     color: 'var(--color-text-primary)'
-                }}>Your Personalized Recommendations</h2>
-                <div style={{
-                    fontSize: '18px',
-                    lineHeight: '28px',
-                    color: '#000',
-                    maxWidth: '800px',
-                    margin: '0 auto',
+                }}>Your Perfect Match</h2>
+                <p style={{
+                    fontSize: '20px',
+                    lineHeight: '32px',
+                    color: 'var(--color-text-secondary)',
                     fontWeight: 400
                 }}>
-                    <BoldText text={`Based on your goals and experience, we recommend the **${original[0].program}** program. However, feel free to explore and choose the style that interests you most.`} />
+                    {recommendations.summary}
+                </p>
+            </div>
+
+            {/* Winner Hero Section */}
+            <div className="glass-card fade-in-up" style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '40px',
+                padding: '0',
+                overflow: 'hidden',
+                backgroundColor: 'white',
+                border: '1px solid var(--color-border)',
+                marginBottom: '80px',
+                minHeight: '500px'
+            }}>
+                {/* Image Side */}
+                <div style={{ position: 'relative', height: '100%', minHeight: '300px' }}>
+                    <img
+                        src={`/programs/${winner.slug}.png`}
+                        alt={winner.program}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            position: 'absolute',
+                            inset: 0
+                        }}
+                    />
+                    <div style={{
+                        position: 'absolute',
+                        top: '24px',
+                        left: '24px',
+                        background: 'var(--color-primary)',
+                        color: 'white',
+                        padding: '8px 20px',
+                        borderRadius: '100px',
+                        fontWeight: 700,
+                        fontSize: '14px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                    }}>
+                        #1 Recommended
+                    </div>
+                </div>
+
+                {/* Content Side */}
+                <div style={{
+                    padding: '64px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center'
+                }}>
+                    <div style={{
+                        fontSize: '80px',
+                        fontFamily: 'var(--font-heading)',
+                        fontWeight: 800,
+                        color: 'var(--color-primary)',
+                        lineHeight: 1,
+                        marginBottom: '8px'
+                    }}>
+                        {winner.score}%
+                    </div>
+                    <div style={{
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        color: 'var(--color-text-tertiary)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '2px',
+                        marginBottom: '32px'
+                    }}>Match Score</div>
+
+                    <h3 style={{
+                        fontSize: '48px',
+                        fontFamily: 'var(--font-heading)',
+                        marginBottom: '24px',
+                        lineHeight: 1.1,
+                        color: 'var(--color-text-primary)'
+                    }}>{winner.program}</h3>
+
+                    <p style={{
+                        fontSize: '18px',
+                        lineHeight: '1.6',
+                        color: 'var(--color-text-secondary)',
+                        marginBottom: '40px'
+                    }}>{winner.reason}</p>
+
+                    <button
+                        className="btn-primary"
+                        style={{ height: '64px', fontSize: '18px', maxWidth: '300px' }}
+                        onClick={async () => {
+                            try {
+                                const response = await fetch('/api/create-checkout-session', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        priceId: 'price_123456789', // Placeholder
+                                        successUrl: window.location.origin + '?success=true',
+                                        cancelUrl: window.location.origin,
+                                        userEmail: user?.email || 'test@example.com', // Use captured email
+                                        programSlug: winner.slug
+                                    })
+                                });
+                                const data = await response.json();
+                                if (data.url) window.location.href = data.url;
+                            } catch (error) {
+                                console.error('Checkout error:', error);
+                                alert('Something went wrong initiating checkout.');
+                            }
+                        }}
+                    >
+                        Start 7-Day Free Trial
+                    </button>
                 </div>
             </div>
 
-            {/* Podium Grid */}
-            <div style={{
-                display: 'flex',
-                flexDirection: 'row',
-                flexWrap: 'nowrap', // Force 5-wide on desktop
-                justifyContent: 'center',
-                alignItems: 'stretch',
-                gap: '12px',
-                marginBottom: '48px',
-                padding: '0 10px',
-                width: '100%'
-            }} className="podium-container">
-                {podiumOrder.map((program) => {
-                    const isWinner = program.program === original[0].program;
-                    const isSelected = selectedProgram?.program === program.program;
-                    const rank = original.findIndex(p => p.program === program.program) + 1;
+            {/* Other Options Grid */}
+            <div>
+                <h3 style={{
+                    fontSize: '24px',
+                    fontWeight: 700,
+                    marginBottom: '32px',
+                    color: 'var(--color-text-secondary)',
+                    textAlign: 'center'
+                }}>Other Potential Matches</h3>
 
-                    return (
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                    gap: '24px'
+                }}>
+                    {runnersUp.map((program) => (
                         <div
                             key={program.program}
-                            onClick={() => setSelectedProgram(program)}
-                            className={`glass-card fade-in-up ${isWinner ? 'winner-card' : ''}`}
+                            onClick={() => setModalProgram(program)}
+                            className="glass-card"
                             style={{
-                                flex: isWinner ? '1 1 240px' : '1 1 200px',
-                                minWidth: '160px',
-                                padding: '24px 12px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
+                                padding: '0',
+                                overflow: 'hidden',
                                 cursor: 'pointer',
-                                transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
-                                position: 'relative',
-                                background: isSelected ? 'rgba(255, 255, 255, 0.98)' : 'var(--color-card-bg)',
-                                border: isWinner ? '2px solid var(--color-primary)' : (isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-border)'),
-                                transform: isSelected ? 'scale(1.03) translateY(-8px)' : 'scale(1)',
-                                boxShadow: isWinner ? '0 15px 45px rgba(1, 117, 89, 0.15)' : (isSelected ? '0 10px 30px rgba(0,0,0,0.1)' : '0 10px 20px rgba(0,0,0,0.05)'),
-                                zIndex: isSelected ? 2 : 1,
-                                height: isWinner ? '340px' : (rank <= 3 ? '300px' : '280px')
+                                transition: 'transform 0.2s',
+                                display: 'flex',
+                                flexDirection: 'column'
                             }}
+                            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+                            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
                         >
-                            {isWinner && (
+                            <div style={{ height: '200px', overflow: 'hidden', position: 'relative' }}>
+                                <img
+                                    src={`/programs/${program.slug || 'placeholder'}.png`}
+                                    alt={program.program}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
                                 <div style={{
                                     position: 'absolute',
-                                    top: '-12px',
-                                    background: 'var(--color-primary)',
-                                    color: 'white',
+                                    top: '12px',
+                                    right: '12px',
+                                    background: 'rgba(255,255,255,0.9)',
                                     padding: '4px 12px',
-                                    borderRadius: '12px',
-                                    fontSize: '10px',
+                                    borderRadius: '100px',
                                     fontWeight: 700,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.05em',
-                                    whiteSpace: 'nowrap',
-                                    boxShadow: '0 4px 8px rgba(1, 117, 89, 0.3)'
-                                }}>Recommended</div>
-                            )}
-
-                            <div style={{
-                                fontSize: '12px',
-                                color: 'var(--color-text-tertiary)',
-                                fontWeight: 700,
-                                opacity: 0.6
-                            }}>0{rank}</div>
-
-                            <div style={{
-                                fontSize: '20px',
-                                fontWeight: 700,
-                                textAlign: 'center',
-                                fontFamily: 'var(--font-heading)',
-                                color: 'var(--color-text-primary)',
-                                marginTop: '12px',
-                                marginBottom: '4px' // Ultra tightened gap
-                            }}>{program.program}</div>
-
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: '0px', // Minimal gap
-                                marginTop: 'auto',
-                                marginBottom: 'auto'
-                            }}>
-                                <div style={{
-                                    fontSize: isWinner ? '36px' : '28px',
-                                    fontWeight: 800,
-                                    color: 'var(--color-primary)',
-                                    lineHeight: '1'
-                                }}>{program.score}%</div>
-                                <div style={{
-                                    fontSize: '10px',
-                                    fontWeight: 600,
-                                    color: 'var(--color-text-tertiary)',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.05em',
-                                    marginTop: '4px'
-                                }}>Match Score</div>
-                            </div>
-
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setModalProgram(program);
-                                }}
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--color-primary)',
                                     fontSize: '12px',
-                                    fontWeight: 600,
-                                    textDecoration: 'underline',
-                                    cursor: 'pointer',
-                                    marginTop: '12px'
-                                }}
-                            >
-                                Why this?
-                            </button>
+                                    color: 'var(--color-text-primary)'
+                                }}>
+                                    {program.score}% Match
+                                </div>
+                            </div>
+                            <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                <h4 style={{
+                                    fontSize: '20px',
+                                    fontFamily: 'var(--font-heading)',
+                                    marginBottom: '8px',
+                                    color: 'var(--color-text-primary)'
+                                }}>{program.program}</h4>
+                                <div style={{
+                                    marginTop: 'auto',
+                                    paddingTop: '16px',
+                                    color: 'var(--color-primary)',
+                                    fontSize: '14px',
+                                    fontWeight: 600
+                                }}>
+                                    Read more →
+                                </div>
+                            </div>
                         </div>
-                    );
-                })}
-            </div>
-
-            {/* CTA */}
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '16px',
-                paddingBottom: '40px'
-            }}>
-                <button className="btn-primary" style={{
-                    width: '100%',
-                    maxWidth: '400px',
-                    height: '64px',
-                    fontSize: '18px',
-                    fontWeight: 700
-                }}>
-                    Start {selectedProgram?.program} Program
-                </button>
-                <button
-                    onClick={() => window.location.reload()}
-                    style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--color-text-tertiary)',
-                        fontSize: '14px',
-                        textDecoration: 'underline',
-                        cursor: 'pointer'
-                    }}
-                >
-                    Retake fitness assessment
-                </button>
+                    ))}
+                </div>
             </div>
 
             {modalProgram && (
@@ -263,16 +332,15 @@ const ProgramPodium = ({ recommendations }) => {
             )}
 
             <style>{`
-                @media (max-width: 1100px) {
-                    .podium-container {
-                        flex-wrap: wrap !important;
-                        gap: 16px !important;
-                    }
+                @media (max-width: 900px) {
                     .glass-card {
-                        flex: 1 1 200px !important;
-                        max-width: 100% !important;
-                        height: auto !important;
-                        min-height: 200px !important;
+                        grid-template-columns: 1fr !important;
+                    }
+                    .glass-card > div:first-child {
+                        height: 300px;
+                    }
+                    .glass-card > div:last-child {
+                        padding: 32px;
                     }
                 }
             `}</style>

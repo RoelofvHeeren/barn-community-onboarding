@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import ProgressBar from './components/ProgressBar';
 import QuestionCard from './components/QuestionCard';
 import LeadCapture from './components/LeadCapture';
 import ProgramPodium from './components/ProgramPodium';
+import PaymentSuccess from './components/PaymentSuccess';
 import { questions } from './data/questions';
 import { analyzeProfile } from './services/gemini';
 import { createContact } from './services/ghl';
@@ -14,6 +15,14 @@ function App() {
   const [answers, setAnswers] = useState({});
   const [user, setUser] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
+
+  useEffect(() => {
+    // Check for payment success redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      setStep('payment_success');
+    }
+  }, []);
 
   const startJourney = () => setStep('lead_capture');
 
@@ -158,8 +167,12 @@ function App() {
 
       {step === 'results' && recommendations && (
         <div style={{ width: '100%' }}>
-          <ProgramPodium recommendations={recommendations} />
+          <ProgramPodium recommendations={recommendations} user={user} />
         </div>
+      )}
+
+      {step === 'payment_success' && (
+        <PaymentSuccess />
       )}
 
       <style>{`
