@@ -19,6 +19,10 @@ app.use((req, res, next) => {
 
 app.use(cors());
 
+// Serve static frontend files (from ../dist)
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../dist')));
+
 const PORT = process.env.PORT || 3001;
 
 // --- Routes ---
@@ -132,6 +136,11 @@ async function handlePaymentFailure(invoice) {
 async function handleSubscriptionCancelled(sub) {
     // Logic to deactivate
 }
+
+// 3. Catch-all: Serve React App for any other route
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
