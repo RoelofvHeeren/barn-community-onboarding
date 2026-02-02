@@ -74,8 +74,8 @@ function App() {
           width: '100%'
         }}>
           <h1 style={{
-            fontSize: '56px',
-            lineHeight: '64px',
+            fontSize: '42px',
+            lineHeight: '1.2',
             fontFamily: 'var(--font-heading)',
             fontWeight: 800,
             marginBottom: '24px'
@@ -90,7 +90,7 @@ function App() {
             color: 'var(--color-text-secondary)',
             marginBottom: '64px'
           }}>
-            Answer 4 questions to get your personalized fitness plan
+            Answer a few questions to get your personalized fitness plan
           </p>
 
           <button
