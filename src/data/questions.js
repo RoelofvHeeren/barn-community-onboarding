@@ -13,7 +13,7 @@ export const questions = [
     },
     {
         id: 'gender',
-        text: "Which best describes you?",
+        text: "What is your gender?",
         options: [
             { label: "Male", value: "male" },
             { label: "Female", value: "female" }
@@ -28,17 +28,6 @@ export const questions = [
             { label: "30-39", value: "30s" },
             { label: "40-49", value: "40s" },
             { label: "50+", value: "50+" }
-        ]
-    },
-    {
-        id: 'environment',
-        text: "Where will you be training?",
-        options: [
-            { label: "Commercial Gym (Fully Equipped)", value: "gym" },
-            { label: "Home Gym (Barbell + Rack)", value: "home_gym" },
-            { label: "Home (Dumbbells/Kettlebells only)", value: "home_limited" },
-            { label: "Home (Bodyweight only)", value: "bodyweight" },
-            { label: "Outdoors / Running", value: "outdoors" }
         ]
     },
     {
