@@ -29,7 +29,7 @@ const PORT = process.env.PORT || 3001;
 
 // 1. Create Checkout Session
 app.post('/api/create-checkout-session', async (req, res) => {
-    const { priceId, successUrl, cancelUrl, userEmail, programSlug } = req.body;
+    const { priceId, successUrl, cancelUrl, userEmail, programSlug, firstName, lastName, phone } = req.body;
 
     try {
         const session = await stripe.checkout.sessions.create({
@@ -52,7 +52,10 @@ app.post('/api/create-checkout-session', async (req, res) => {
             cancel_url: cancelUrl,
             metadata: {
                 programSlug: programSlug, // Access in session completed
-                userEmail: userEmail
+                userEmail: userEmail,
+                firstName: firstName,
+                lastName: lastName,
+                phone: phone
             }
         });
 
@@ -109,15 +112,33 @@ app.post('/api/webhooks/stripe', bodyParser.raw({ type: 'application/json' }), a
 
 // --- Handlers ---
 
+const PROGRAM_MAPPING = require('./config/programs');
+
 async function handleNewSubscription(session) {
-    const { userEmail, programSlug } = session.metadata || {};
+    const { userEmail, programSlug, firstName, lastName, phone } = session.metadata || {};
     // 1. Create User in Trainerize (if not exists)
     // 2. Subscribe/Activate Program
     if (userEmail && programSlug) {
         try {
-            const client = await createClient({ email: userEmail, first_name: 'New', last_name: 'Member' }); // Use placeholder names or stored metadata
-            await activateProgram(client.id, programSlug);
-            console.log(`Activated ${programSlug} for ${userEmail}`);
+            const client = await createClient({
+                email: userEmail,
+                first_name: firstName || 'New',
+                last_name: lastName || 'Member',
+                phone: phone
+            });
+
+            // Trainerize API often uses 'userID', but we check 'id' too just in case
+            const trainerizeId = client.userID || client.id;
+            const programId = PROGRAM_MAPPING[programSlug];
+
+            console.log(`Mapped slug '${programSlug}' to ID '${programId}'`);
+
+            if (trainerizeId && programId) {
+                await activateProgram(trainerizeId, programId);
+                console.log(`Activated Program ID ${programId} for ${userEmail} (ID: ${trainerizeId})`);
+            } else {
+                console.error("Failed to activate: Missing User ID or Program ID mapping", { trainerizeId, programSlug, programId });
+            }
         } catch (e) {
             console.error("Failed to activate Trainerize:", e.message);
         }
@@ -138,10 +159,16 @@ async function handleSubscriptionCancelled(sub) {
 }
 
 // 3. Catch-all: Serve React App for any other route
-app.get('*', (req, res) => {
+// 3. Catch-all: Serve React App for any other route
+app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = {
+    handleNewSubscription,
+    handlePaymentFailure
+};

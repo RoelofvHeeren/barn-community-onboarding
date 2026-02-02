@@ -1,61 +1,94 @@
 const axios = require('axios');
 
-const TRAINERIZE_API_URL = 'https://api.trainerize.com/v1'; // Check actual URL
-const API_KEY = process.env.TRAINERIZE_API_KEY;
+const TRAINERIZE_API_URL = 'https://api.trainerize.com/v03';
 
-// NOTE: These are placeholder implementations. 
-// We need the ACTUAL Trainerize API docs to know the endpoints.
+// Helper to encode credentials for Basic Auth
+function getAuthHeader() {
+    const groupID = process.env.VITE_TRAINERIZE_GROUP_ID || process.env.TRAINERIZE_GROUP_ID; // Support both naming conventions
+    const apiToken = process.env.VITE_TRAINERIZE_API_TOKEN || process.env.TRAINERIZE_API_TOKEN;
+
+    if (!groupID || !apiToken) {
+        console.error("Missing Trainerize credentials in .env");
+        throw new Error("Missing Trainerize credentials");
+    }
+
+    const credentials = Buffer.from(`${groupID}:${apiToken}`).toString('base64');
+    return `Basic ${credentials}`;
+}
 
 const api = axios.create({
     baseURL: TRAINERIZE_API_URL,
     headers: {
-        'Authorization': `Bearer ${API_KEY}`,
         'Content-Type': 'application/json'
     }
 });
 
-async function createClient(user) {
-    console.log(`[Mock] Creating Trainerize client: ${user.email}`);
-    // Mock Response
-    return { id: 'mock_client_123', email: user.email };
+// Add interceptor to inject auth header dynamically so it picks up env vars at runtime
+api.interceptors.request.use(config => {
+    config.headers['Authorization'] = getAuthHeader();
+    return config;
+});
 
-    /* 
-    const res = await api.post('/clients', {
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name
-    });
-    return res.data; 
-    */
+async function createClient(user) {
+    console.log(`Creating Trainerize client for: ${user.email}`);
+
+    try {
+        const payload = {
+            email: user.email,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            role: 'client',
+            status: 'active'
+        };
+
+        if (user.phone) {
+            payload.mobile_phone = user.phone;
+        }
+
+        const res = await api.post('/users', payload);
+        console.log('Client created successfully:', res.data);
+        return res.data;
+    } catch (error) {
+        console.error('Error creating client:', error.response?.data || error.message);
+        // If user already exists, we might want to return the existing user or handle gracefully
+        if (error.response?.status === 409) {
+            console.log('User likely already exists, checking for existing user...');
+            // Logic to find user could go here, for now re-throw or return null
+        }
+        throw error;
+    }
 }
 
-async function activateProgram(clientId, programSlug) {
-    console.log(`[Mock] Activating program ${programSlug} for client ${clientId}`);
-    // Map internal slug to Trainerize Program ID
-    const programId = getTrainerizeProgramId(programSlug);
+async function activateProgram(clientId, programId) {
+    console.log(`Activating program ID ${programId} for client ${clientId}`);
 
-    /*
-    await api.post(`/clients/${clientId}/programs`, {
-        program_id: programId,
-        start_date: new Date().toISOString()
-    });
-    */
-    return true;
+    if (!programId || programId === '00000') {
+        console.warn(`Invalid Program ID provided: ${programId}`);
+        return false;
+    }
+
+    try {
+        const payload = {
+            userID: parseInt(clientId, 10),
+            programID: parseInt(programId, 10),
+            startDate: new Date().toISOString().split('T')[0], // today YYYY-MM-DD
+            forceMerge: true
+        };
+
+        // Using copyToUser as identified in documentation
+        const res = await api.post('/program/copyToUser', payload);
+        console.log(`Program assigned successfully:`, res.data);
+        return true;
+    } catch (error) {
+        console.error(`Error assigning program:`, error.response?.data || error.message);
+        throw error;
+    }
 }
 
 async function deactivateProgram(clientId) {
-    console.log(`[Mock] Deactivating programs for client ${clientId}`);
+    console.log(`[TODO] Deactivating programs for client ${clientId}`);
+    // Implementation would depend on whether we want to deactivate the user or just the program
     return true;
-}
-
-function getTrainerizeProgramId(slug) {
-    const MAPPING = {
-        'power_building': '12345',
-        'hybrid_athlete': '67890',
-        'kettlebell_program': '11111',
-        // ... add others
-    };
-    return MAPPING[slug] || '00000';
 }
 
 module.exports = {

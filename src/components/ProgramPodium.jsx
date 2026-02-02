@@ -234,7 +234,10 @@ const ProgramPodium = ({ recommendations, user }) => {
                                         priceId: 'price_123456789', // Placeholder
                                         successUrl: window.location.origin + '?success=true',
                                         cancelUrl: window.location.origin,
-                                        userEmail: user?.email || 'test@example.com', // Use captured email
+                                        userEmail: user?.email || 'test@example.com',
+                                        firstName: user?.firstName,
+                                        lastName: user?.lastName,
+                                        phone: user?.phone,
                                         programSlug: winner.slug
                                     })
                                 });
