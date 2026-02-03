@@ -90,8 +90,28 @@ const ProgramPodium = ({ recommendations, user }) => {
 
                     <button
                         className="btn-primary cta-button-large"
-                        onClick={() => {
-                            // Direct redirect as requested by user
+                        onClick={async () => {
+                            // 1. Capture intent locally first
+                            try {
+                                const leadData = {
+                                    email: user?.email || '',
+                                    firstName: user?.firstName || '',
+                                    lastName: user?.lastName || '',
+                                    programSlug: winner.slug
+                                };
+
+                                // Fire and forget (or await if critical, but we want speed)
+                                // We await briefly to ensure the request leaves but default to redirect loop
+                                await fetch('/api/save-lead', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(leadData)
+                                });
+                            } catch (e) {
+                                console.warn("Could not save lead intent, proceeding to checkout anyway", e);
+                            }
+
+                            // 2. Direct redirect to Circle
                             window.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
 
                             /* Previous Logic (Trainerize Integration) - Kept for reference but bypassed

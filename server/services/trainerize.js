@@ -85,14 +85,35 @@ async function activateProgram(clientId, programId) {
     }
 }
 
-async function deactivateProgram(clientId) {
-    console.log(`[TODO] Deactivating programs for client ${clientId}`);
-    // Implementation would depend on whether we want to deactivate the user or just the program
-    return true;
+async function deactivateClient(userId) {
+    console.log(`Deactivating client ${userId}...`);
+
+    if (!userId) {
+        console.warn("Cannot deactivate: No User ID provided");
+        return false;
+    }
+
+    try {
+        const payload = {
+            userID: parseInt(userId, 10),
+            status: 'deactivated'
+        };
+
+        // Using the same /users endpoint with PUT/POST to update status
+        // Documentation implies updating user properties directly
+        const res = await api.put('/users', payload);
+        console.log(`Client ${userId} deactivated successfully:`, res.data);
+        return true;
+    } catch (error) {
+        console.error(`Error deactivating client:`, error.response?.data || error.message);
+        // Fallback: If PUT not supported, try known pattern or just log error
+        // Some APIs require specific deactivation endpoint, but standard is invalidating status
+        throw error;
+    }
 }
 
 module.exports = {
     createClient,
     activateProgram,
-    deactivateProgram
+    deactivateClient
 };

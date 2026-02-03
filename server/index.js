@@ -66,6 +66,34 @@ app.post('/api/create-checkout-session', async (req, res) => {
     }
 });
 
+// Save generic lead (intent capture)
+app.post('/api/save-lead', (req, res) => {
+    const { email, programSlug, firstName, lastName } = req.body;
+
+    if (!email || !programSlug) {
+        return res.status(400).json({ error: 'Missing email or programSlug' });
+    }
+
+    const users = getStoredUsers();
+
+    // Key by email (lowercase)
+    const key = email.toLowerCase().trim();
+
+    users[key] = {
+        ...(users[key] || {}),
+        email: key,
+        firstName: firstName || users[key]?.firstName,
+        lastName: lastName || users[key]?.lastName,
+        programSlug: programSlug, // Store the intended program
+        updatedAt: new Date().toISOString()
+    };
+
+    saveStoredUsers(users);
+    console.log(`Lead saved: ${key} -> ${programSlug}`);
+
+    res.json({ success: true });
+});
+
 // 2. Stripe Webhook
 app.post('/api/webhooks/stripe', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -115,33 +143,83 @@ app.post('/api/webhooks/stripe', bodyParser.raw({ type: 'application/json' }), a
 const PROGRAM_MAPPING = require('./config/programs');
 
 async function handleNewSubscription(session) {
-    const { userEmail, programSlug, firstName, lastName, phone } = session.metadata || {};
-    // 1. Create User in Trainerize (if not exists)
-    // 2. Subscribe/Activate Program
+    const { customer_email, customer_details } = session;
+    const userEmail = customer_email || customer_details?.email;
+
+    // Fallbacks
+    let programSlug = session.metadata?.programSlug;
+    let firstName = session.metadata?.firstName || customer_details?.name?.split(' ')[0] || 'Member';
+    let lastName = session.metadata?.lastName || customer_details?.name?.split(' ').slice(1).join(' ') || '';
+    let phone = session.metadata?.phone || customer_details?.phone;
+
+    // 1. If no program slug in metadata, check our local "users.json" bridge
+    const users = getStoredUsers();
+    const key = userEmail?.toLowerCase().trim();
+
+    if (!programSlug && key && users[key]) {
+        console.log(`Found pending lead for ${key}, bridging data...`);
+        const lead = users[key];
+        programSlug = lead.programSlug;
+        // Enrich other data if missing
+        if (firstName === 'Member') firstName = lead.firstName || firstName;
+        if (!lastName) lastName = lead.lastName || '';
+    }
+
+    // 2. Execute Trainerize Logic
     if (userEmail && programSlug) {
+        console.log(`Processing new subscription for: ${userEmail}, Program: ${programSlug}`);
         try {
+            // Create Client
             const client = await createClient({
                 email: userEmail,
-                first_name: firstName || 'New',
-                last_name: lastName || 'Member',
-                phone: phone
+                first_name: firstName,
+                last_name: lastName,
+                phone
             });
 
-            // Trainerize API often uses 'userID', but we check 'id' too just in case
             const trainerizeId = client.userID || client.id;
             const programId = PROGRAM_MAPPING[programSlug];
 
-            console.log(`Mapped slug '${programSlug}' to ID '${programId}'`);
-
             if (trainerizeId && programId) {
+                // Activate Program
                 await activateProgram(trainerizeId, programId);
-                console.log(`Activated Program ID ${programId} for ${userEmail} (ID: ${trainerizeId})`);
+                console.log(`Successfully onboarded ${userEmail} to Trainerize`);
+
+                // 3. Update local store with Trainerize ID (short-term cache)
+                if (key) {
+                    users[key] = {
+                        ...(users[key] || {}),
+                        trainerizeId: trainerizeId,
+                        status: 'active',
+                        updatedAt: new Date().toISOString()
+                    };
+                    saveStoredUsers(users);
+                }
+
+                // 4. Update Stripe Customer Metadata (long-term resilience)
+                // We need the Stripe Customer ID to stick this metadata to them
+                if (session.customer) {
+                    try {
+                        await stripe.customers.update(session.customer, {
+                            metadata: {
+                                trainerizeId: String(trainerizeId),
+                                currentProgramSlug: programSlug
+                            }
+                        });
+                        console.log(`Stripe Customer ${session.customer} updated with Trainerize ID: ${trainerizeId}`);
+                    } catch (stripeError) {
+                        console.error("Failed to update Stripe metadata:", stripeError.message);
+                    }
+                }
+
             } else {
                 console.error("Failed to activate: Missing User ID or Program ID mapping", { trainerizeId, programSlug, programId });
             }
         } catch (e) {
             console.error("Failed to activate Trainerize:", e.message);
         }
+    } else {
+        console.warn("Skipping Trainerize activation: Missing email or program slug", { userEmail, programSlug });
     }
 }
 
@@ -154,11 +232,59 @@ async function handlePaymentFailure(invoice) {
     }
 }
 
-async function handleSubscriptionCancelled(sub) {
-    // Logic to deactivate
+async function handleSubscriptionCancelled(subscription) {
+    const stripeCustomerId = subscription.customer;
+    let trainerizeId = null;
+    let userEmail = null;
+
+    // 1. Attempt to resolve Trainerize ID from Stripe Metadata (Preferred)
+    if (stripeCustomerId) {
+        try {
+            const customer = await stripe.customers.retrieve(stripeCustomerId);
+            userEmail = customer.email;
+            if (customer.metadata && customer.metadata.trainerizeId) {
+                trainerizeId = customer.metadata.trainerizeId;
+                console.log(`Found Trainerize ID in Stripe metadata: ${trainerizeId}`);
+            }
+        } catch (e) {
+            console.error("Error fetching stripe customer for cancellation:", e.message);
+        }
+    }
+
+    // 2. Fallback: Lookup in local store
+    if (!trainerizeId && userEmail) {
+        console.log("No ID in Stripe metadata, checking local store...");
+        const users = getStoredUsers();
+        const key = userEmail.toLowerCase().trim();
+        const lead = users[key];
+        if (lead && lead.trainerizeId) {
+            trainerizeId = lead.trainerizeId;
+        }
+    }
+
+    if (trainerizeId) {
+        try {
+            await deactivateClient(trainerizeId);
+            console.log(`Deactivated Trainerize User ${trainerizeId} (Email: ${userEmail}) due to cancellation.`);
+
+            // Cleanup local store if exists
+            if (userEmail) {
+                const users = getStoredUsers();
+                const key = userEmail.toLowerCase().trim();
+                if (users[key]) {
+                    users[key] = { ...users[key], status: 'deactivated', cancelledAt: new Date().toISOString() };
+                    saveStoredUsers(users);
+                }
+            }
+
+        } catch (e) {
+            console.error(`Failed to deactivate user ${trainerizeId}:`, e.message);
+        }
+    } else {
+        console.warn(`Could not find Trainerize ID for cancelled subscription (Customer: ${stripeCustomerId}, Email: ${userEmail}). Skipping deactivation.`);
+    }
 }
 
-// 3. Catch-all: Serve React App for any other route
 // 3. Catch-all: Serve React App for any other route
 app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
@@ -170,5 +296,6 @@ app.listen(PORT, () => {
 
 module.exports = {
     handleNewSubscription,
-    handlePaymentFailure
+    handlePaymentFailure,
+    handleSubscriptionCancelled
 };
