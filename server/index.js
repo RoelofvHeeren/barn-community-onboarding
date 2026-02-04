@@ -150,35 +150,44 @@ async function handleNewSubscription(session) {
     const { customer_email, customer_details } = session;
     const userEmail = customer_email || customer_details?.email;
 
+    console.log(`[Stripe Handler] 🚀 START: processing new subscription for ${userEmail}`);
+
     // Fallbacks
     let programSlug = session.metadata?.programSlug;
     let firstName = session.metadata?.firstName || customer_details?.name?.split(' ')[0] || 'Member';
     let lastName = session.metadata?.lastName || customer_details?.name?.split(' ').slice(1).join(' ') || '';
     let phone = session.metadata?.phone || customer_details?.phone;
 
+    console.log(`[Stripe Handler] Metadata Init: Program=${programSlug}, Name=${firstName} ${lastName}`);
+
     // 1. If no program slug in metadata, check our local "users.json" bridge
     const users = getStoredUsers();
     const key = userEmail?.toLowerCase().trim();
     let leadData = {};
 
+    console.log(`[Stripe Handler] Looking up intent in local store for key: ${key}`);
+
     if (key && users[key]) {
-        console.log(`Found pending lead for ${key}, bridging data...`);
+        console.log(`[Stripe Handler] ✅ Found pending lead! Bridging data...`);
         leadData = users[key];
         programSlug = programSlug || leadData.programSlug;
         if (firstName === 'Member') firstName = leadData.firstName || firstName;
         if (!lastName) lastName = leadData.lastName || '';
+        console.log(`[Stripe Handler] Enhanced Data: Program=${programSlug}, Name=${firstName} ${lastName}`);
+    } else {
+        console.log(`[Stripe Handler] No pending lead found locally.`);
     }
 
     // 2. Execute Integrations
     if (userEmail && programSlug) {
-        console.log(`Processing new subscription for: ${userEmail}, Program: ${programSlug}`);
+        console.log(`[Stripe Handler] ⚡ Executes Integrations for: ${userEmail}, Program: ${programSlug}`);
 
         let trainerizeId = null;
         let ghlContactId = null;
 
         // A. GoHighLevel Sync (Leads -> Trial)
         try {
-            console.log("Syncing to GHL...");
+            console.log("[GHL Sync] ⏳ Starting syncContact...");
             // Combine data from session and lead store (quiz answers)
             const fullUserData = {
                 email: userEmail,
@@ -190,40 +199,48 @@ async function handleNewSubscription(session) {
             };
 
             ghlContactId = await syncContact(fullUserData);
+            console.log(`[GHL Sync] ✅ Contact Synced. ID: ${ghlContactId}`);
 
             if (ghlContactId) {
                 // Add "Trial Community" Tag
+                console.log("[GHL Sync] Adding Tag: Trial Community");
                 await manageTags(ghlContactId, ['Trial Community']);
 
                 // Create Opportunity "On Trial"
+                console.log("[GHL Sync] Updating Stage: On Trial");
                 await updatePipelineStage(ghlContactId, 'On Trial', 'open');
 
-                console.log(`GHL Setup Complete for ${userEmail} (ID: ${ghlContactId})`);
+                console.log(`[GHL Sync] Setup Complete for ${userEmail}`);
             }
         } catch (e) {
-            console.error("GHL Sync Failed:", e.message);
+            console.error("[GHL Sync] ❌ FAILED:", e.message);
         }
 
         // B. Trainerize Sync
         try {
+            console.log("[Trainerize Sync] ⏳ Creating Client...");
             // Create Client
             const client = await createClient({ email: userEmail, first_name: firstName, last_name: lastName, phone });
             trainerizeId = client.userID || client.id;
             const programId = PROGRAM_MAPPING[programSlug];
 
+            console.log(`[Trainerize Sync] Client Created. ID: ${trainerizeId}`);
+
             if (trainerizeId && programId) {
+                console.log(`[Trainerize Sync] activating program ${programId}...`);
                 await activateProgram(trainerizeId, programId);
-                console.log(`Successfully onboarded ${userEmail} to Trainerize`);
+                console.log(`[Trainerize Sync] ✅ Successfully onboarded ${userEmail}`);
             } else {
-                console.error("Failed to activate: Missing User ID or Program ID mapping", { trainerizeId, programSlug });
+                console.error("[Trainerize Sync] ❌ Failed to activate: Missing User ID or Program ID mapping", { trainerizeId, programSlug });
             }
         } catch (e) {
-            console.error("Failed to activate Trainerize:", e.message);
+            console.error("[Trainerize Sync] ❌ FAILED:", e.message);
         }
 
         // C. Resilience: Store External IDs in Stripe Metadata & Local
         if (session.customer && (trainerizeId || ghlContactId)) {
             try {
+                console.log(`[Stripe Metadata] Updating Customer ${session.customer}...`);
                 await stripe.customers.update(session.customer, {
                     metadata: {
                         trainerizeId: String(trainerizeId || ''),
@@ -231,14 +248,15 @@ async function handleNewSubscription(session) {
                         currentProgramSlug: programSlug
                     }
                 });
-                console.log(`Stripe Metadata Updated. TID: ${trainerizeId}, GHL: ${ghlContactId}`);
+                console.log(`[Stripe Metadata] ✅ Updated. TID: ${trainerizeId}, GHL: ${ghlContactId}`);
             } catch (stripeError) {
-                console.error("Failed to update Stripe metadata:", stripeError.message);
+                console.error("[Stripe Metadata] ❌ Failed to update:", stripeError.message);
             }
         }
 
         // Update Local Store (Optional but good for fallback)
         if (key) {
+            console.log("[Local Store] Updating user record...");
             users[key] = {
                 ...(users[key] || {}),
                 trainerizeId,
@@ -247,11 +265,14 @@ async function handleNewSubscription(session) {
                 updatedAt: new Date().toISOString()
             };
             saveStoredUsers(users);
+            console.log("[Local Store] Saved.");
         }
 
     } else {
-        console.warn("Skipping integrations: Missing email or program slug", { userEmail, programSlug });
+        console.warn(`[Stripe Handler] ⚠️ Skipping integrations: Missing email (${userEmail}) or program slug (${programSlug})`);
     }
+
+    console.log(`[Stripe Handler] 🏁 END: finished processing for ${userEmail}`);
 }
 
 async function handleSubscriptionUpdated(subscription, previousAttributes) {
@@ -359,6 +380,33 @@ async function handleSubscriptionCancelled(subscription) {
         } catch (e) {
             console.error(`Failed to update GHL for cancellation:`, e.message);
         }
+    }
+}
+
+// Helper for local store
+const fs = require('fs');
+const USERS_FILE = path.join(__dirname, 'data/users.json');
+
+function getStoredUsers() {
+    try {
+        if (fs.existsSync(USERS_FILE)) {
+            const data = fs.readFileSync(USERS_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (err) {
+        console.error("Error reading users.json:", err.message);
+    }
+    return {};
+}
+
+function saveStoredUsers(users) {
+    try {
+        if (!fs.existsSync(path.dirname(USERS_FILE))) {
+            fs.mkdirSync(path.dirname(USERS_FILE), { recursive: true });
+        }
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    } catch (err) {
+        console.error("Error writing users.json:", err.message);
     }
 }
 
