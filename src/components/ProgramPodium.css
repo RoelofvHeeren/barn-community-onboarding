@@ -285,20 +285,170 @@
 
 /* Responsive */
 @media (max-width: 900px) {
+  .podium-container {
+    padding-bottom: 40px;
+  }
+
+  .podium-header {
+    margin-bottom: 40px;
+    padding: 0 20px;
+  }
+
+  .podium-title {
+    font-size: 36px;
+    margin-bottom: 16px;
+  }
+
+  .podium-subtitle {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
   .winner-card {
     grid-template-columns: 1fr !important;
+    margin-bottom: 48px;
+    min-height: auto;
   }
 
   .winner-image-container {
-    height: 300px;
+    height: 280px;
+    min-height: 280px;
   }
 
   .winner-content {
-    padding: 32px;
+    padding: 32px 24px;
+  }
+
+  .match-score-large {
+    font-size: 56px;
+  }
+
+  .winner-program-name {
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  .winner-description {
+    font-size: 16px;
+    margin-bottom: 32px;
+  }
+
+  .cta-button-large {
+    width: 100%;
+    max-width: 100%;
+    height: 56px;
+    font-size: 16px;
+  }
+
+  .runners-up-title {
+    font-size: 20px;
+    margin-bottom: 24px;
+    padding: 0 20px;
+  }
+
+  .runners-up-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 20px;
+  }
+
+  .runner-up-image-container {
+    height: 180px;
+  }
+
+  .runner-up-content {
+    padding: 20px;
+  }
+
+  .runner-up-title {
+    font-size: 18px;
   }
 
   .modal-box {
     padding: 24px;
     margin: 16px;
+  }
+
+  .modal-program-title {
+    font-size: 24px;
+  }
+
+  .modal-description {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .podium-header {
+    padding: 0 16px;
+  }
+
+  .podium-title {
+    font-size: 28px;
+  }
+
+  .podium-subtitle {
+    font-size: 14px;
+  }
+
+  .winner-image-container {
+    height: 240px;
+    min-height: 240px;
+  }
+
+  .winner-content {
+    padding: 24px 20px;
+  }
+
+  .match-score-large {
+    font-size: 48px;
+  }
+
+  .match-label {
+    font-size: 12px;
+    margin-bottom: 24px;
+  }
+
+  .winner-program-name {
+    font-size: 28px;
+  }
+
+  .winner-description {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .recommendation-badge {
+    top: 16px;
+    left: 16px;
+    padding: 6px 16px;
+    font-size: 12px;
+  }
+
+  .runners-up-grid {
+    padding: 0 16px;
+  }
+
+  .runner-up-image-container {
+    height: 160px;
+  }
+
+  .modal-box {
+    padding: 20px;
+    margin: 12px;
+    border-radius: 16px;
+  }
+
+  .modal-image-container {
+    height: 160px;
+    margin-bottom: 20px;
+  }
+
+  .modal-close-btn {
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
   }
 }
