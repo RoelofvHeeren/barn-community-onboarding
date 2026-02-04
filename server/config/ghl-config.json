@@ -1,0 +1,24 @@
+{
+  "locationId": "VYZcxHGdxD0Dj1cj1ZU4",
+  "fields": {
+    "goal": "fOt63tVqRkehkh6H9c9r",
+    "gender": "ZjGjuDn8ckaWdrXKXhTR",
+    "age": "AC3ntcR60Drc8De3Tw4M",
+    "experience": "dHIU3ScVKdpNG5UrZGl1",
+    "frequency": "QgMoPO1PWJ0ZtxEnSNFH",
+    "duration": "QJGQLA207sw49bvDDSuE",
+    "cardio": "j2Pn01NcjaPIkPMvtrFV",
+    "equipment": "5C84FNc5ZsbpPU06HjAJ",
+    "limitations": "3lfBteRrfyOiLNwuUNUN",
+    "program_slug": "CpDqFd1b5lNpw51CgGki"
+  },
+  "pipeline": {
+    "id": "UDwVmXOQDicQbXOmt7Ov",
+    "stages": {
+      "On Trial": "68d0cd97-278d-4874-8028-5ac4e88efdda",
+      "Member": "f12bf99c-12f5-4ca8-bd57-ec76f4e42a6f",
+      "Online Coaching": "44b48d38-504e-4623-9414-419dc36004bc",
+      "Lost": "5084e414-bd79-4332-a28b-6cf4c4842f25"
+    }
+  }
+}

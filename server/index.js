@@ -3,7 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const Stripe = require('stripe');
-const { createClient, activateProgram, deactivateProgram } = require('./services/trainerize');
+const { createClient, activateProgram, deactivateClient } = require('./services/trainerize');
+const { syncContact, manageTags, updatePipelineStage } = require('./services/ghl');
 
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -112,14 +113,17 @@ app.post('/api/webhooks/stripe', bodyParser.raw({ type: 'application/json' }), a
             case 'checkout.session.completed':
                 const session = event.data.object;
                 console.log('Checkout Completed:', session.customer_email);
-                // Create Trainerize Account & Activate
                 await handleNewSubscription(session);
+                break;
+
+            case 'customer.subscription.updated':
+                const subUpdated = event.data.object;
+                await handleSubscriptionUpdated(subUpdated, event.data.previous_attributes);
                 break;
 
             case 'invoice.payment_failed':
                 const invoice = event.data.object;
                 console.log('Payment Failed:', invoice.customer_email);
-                // Pause/Deactivate Trainerize
                 await handlePaymentFailure(invoice);
                 break;
 
@@ -155,133 +159,206 @@ async function handleNewSubscription(session) {
     // 1. If no program slug in metadata, check our local "users.json" bridge
     const users = getStoredUsers();
     const key = userEmail?.toLowerCase().trim();
+    let leadData = {};
 
-    if (!programSlug && key && users[key]) {
+    if (key && users[key]) {
         console.log(`Found pending lead for ${key}, bridging data...`);
-        const lead = users[key];
-        programSlug = lead.programSlug;
-        // Enrich other data if missing
-        if (firstName === 'Member') firstName = lead.firstName || firstName;
-        if (!lastName) lastName = lead.lastName || '';
+        leadData = users[key];
+        programSlug = programSlug || leadData.programSlug;
+        if (firstName === 'Member') firstName = leadData.firstName || firstName;
+        if (!lastName) lastName = leadData.lastName || '';
     }
 
-    // 2. Execute Trainerize Logic
+    // 2. Execute Integrations
     if (userEmail && programSlug) {
         console.log(`Processing new subscription for: ${userEmail}, Program: ${programSlug}`);
+
+        let trainerizeId = null;
+        let ghlContactId = null;
+
+        // A. GoHighLevel Sync (Leads -> Trial)
+        try {
+            console.log("Syncing to GHL...");
+            // Combine data from session and lead store (quiz answers)
+            const fullUserData = {
+                email: userEmail,
+                firstName,
+                lastName,
+                phone,
+                programSlug,
+                answers: leadData.answers || {} // Pass quiz answers if available
+            };
+
+            ghlContactId = await syncContact(fullUserData);
+
+            if (ghlContactId) {
+                // Add "Trial Community" Tag
+                await manageTags(ghlContactId, ['Trial Community']);
+
+                // Create Opportunity "On Trial"
+                await updatePipelineStage(ghlContactId, 'On Trial', 'open');
+
+                console.log(`GHL Setup Complete for ${userEmail} (ID: ${ghlContactId})`);
+            }
+        } catch (e) {
+            console.error("GHL Sync Failed:", e.message);
+        }
+
+        // B. Trainerize Sync
         try {
             // Create Client
-            const client = await createClient({
-                email: userEmail,
-                first_name: firstName,
-                last_name: lastName,
-                phone
-            });
-
-            const trainerizeId = client.userID || client.id;
+            const client = await createClient({ email: userEmail, first_name: firstName, last_name: lastName, phone });
+            trainerizeId = client.userID || client.id;
             const programId = PROGRAM_MAPPING[programSlug];
 
             if (trainerizeId && programId) {
-                // Activate Program
                 await activateProgram(trainerizeId, programId);
                 console.log(`Successfully onboarded ${userEmail} to Trainerize`);
-
-                // 3. Update local store with Trainerize ID (short-term cache)
-                if (key) {
-                    users[key] = {
-                        ...(users[key] || {}),
-                        trainerizeId: trainerizeId,
-                        status: 'active',
-                        updatedAt: new Date().toISOString()
-                    };
-                    saveStoredUsers(users);
-                }
-
-                // 4. Update Stripe Customer Metadata (long-term resilience)
-                // We need the Stripe Customer ID to stick this metadata to them
-                if (session.customer) {
-                    try {
-                        await stripe.customers.update(session.customer, {
-                            metadata: {
-                                trainerizeId: String(trainerizeId),
-                                currentProgramSlug: programSlug
-                            }
-                        });
-                        console.log(`Stripe Customer ${session.customer} updated with Trainerize ID: ${trainerizeId}`);
-                    } catch (stripeError) {
-                        console.error("Failed to update Stripe metadata:", stripeError.message);
-                    }
-                }
-
             } else {
-                console.error("Failed to activate: Missing User ID or Program ID mapping", { trainerizeId, programSlug, programId });
+                console.error("Failed to activate: Missing User ID or Program ID mapping", { trainerizeId, programSlug });
             }
         } catch (e) {
             console.error("Failed to activate Trainerize:", e.message);
         }
+
+        // C. Resilience: Store External IDs in Stripe Metadata & Local
+        if (session.customer && (trainerizeId || ghlContactId)) {
+            try {
+                await stripe.customers.update(session.customer, {
+                    metadata: {
+                        trainerizeId: String(trainerizeId || ''),
+                        ghlContactId: String(ghlContactId || ''),
+                        currentProgramSlug: programSlug
+                    }
+                });
+                console.log(`Stripe Metadata Updated. TID: ${trainerizeId}, GHL: ${ghlContactId}`);
+            } catch (stripeError) {
+                console.error("Failed to update Stripe metadata:", stripeError.message);
+            }
+        }
+
+        // Update Local Store (Optional but good for fallback)
+        if (key) {
+            users[key] = {
+                ...(users[key] || {}),
+                trainerizeId,
+                ghlContactId,
+                status: 'active',
+                updatedAt: new Date().toISOString()
+            };
+            saveStoredUsers(users);
+        }
+
     } else {
-        console.warn("Skipping Trainerize activation: Missing email or program slug", { userEmail, programSlug });
+        console.warn("Skipping integrations: Missing email or program slug", { userEmail, programSlug });
+    }
+}
+
+async function handleSubscriptionUpdated(subscription, previousAttributes) {
+    // Check for Trial -> Active Conversion
+    if (subscription.status === 'active' && previousAttributes?.status === 'trialing') {
+        console.log(`Subscription converted to ACTIVE for ${subscription.customer}`);
+
+        // Resolve GHL ID
+        let ghlContactId = null;
+        let programSlug = '';
+
+        try {
+            const customer = await stripe.customers.retrieve(subscription.customer);
+            ghlContactId = customer.metadata?.ghlContactId;
+            programSlug = customer.metadata?.currentProgramSlug || '';
+
+            // Fallback: Check local store if not in metadata
+            if (!ghlContactId) {
+                const users = getStoredUsers();
+                const key = customer.email?.toLowerCase().trim();
+                ghlContactId = users[key]?.ghlContactId;
+            }
+
+            if (ghlContactId) {
+                console.log(`Converting GHL Contact ${ghlContactId}...`);
+
+                // 1. Remove Trial Tag
+                await manageTags(ghlContactId, [], ['Trial Community']);
+
+                // 2. Determine Stage (Member vs Online Coaching)
+                // Logic: If program/description contains "gold"
+                // Checking programSlug is easiest if it reflects the plan
+                let targetStage = 'Member';
+                if (programSlug.toLowerCase().includes('gold')) {
+                    targetStage = 'Online Coaching';
+                }
+
+                // 3. Update Opportunity
+                await updatePipelineStage(ghlContactId, targetStage, 'won');
+                console.log(`Moved to stage: ${targetStage}`);
+
+            } else {
+                console.warn("No GHL ID found for converted subscription.");
+            }
+
+        } catch (e) {
+            console.error("Error handling subscription update:", e.message);
+        }
     }
 }
 
 async function handlePaymentFailure(invoice) {
-    // Logic to find user by email and deactivate
     const email = invoice.customer_email;
-    if (email) {
-        // await deactivateProgramByEmail(email); 
-        console.log(`Should deactivate user ${email} due to payment failure`);
-    }
+    if (email) console.log(`Should deactivate user ${email} due to payment failure`);
 }
 
 async function handleSubscriptionCancelled(subscription) {
     const stripeCustomerId = subscription.customer;
     let trainerizeId = null;
+    let ghlContactId = null;
     let userEmail = null;
 
-    // 1. Attempt to resolve Trainerize ID from Stripe Metadata (Preferred)
+    // 1. Resolve IDs from Stripe Metadata
     if (stripeCustomerId) {
         try {
             const customer = await stripe.customers.retrieve(stripeCustomerId);
             userEmail = customer.email;
-            if (customer.metadata && customer.metadata.trainerizeId) {
+            if (customer.metadata) {
                 trainerizeId = customer.metadata.trainerizeId;
-                console.log(`Found Trainerize ID in Stripe metadata: ${trainerizeId}`);
+                ghlContactId = customer.metadata.ghlContactId;
             }
         } catch (e) {
             console.error("Error fetching stripe customer for cancellation:", e.message);
         }
     }
 
-    // 2. Fallback: Lookup in local store
-    if (!trainerizeId && userEmail) {
-        console.log("No ID in Stripe metadata, checking local store...");
+    // 2. Fallback: Local Store
+    if ((!trainerizeId || !ghlContactId) && userEmail) {
         const users = getStoredUsers();
         const key = userEmail.toLowerCase().trim();
         const lead = users[key];
-        if (lead && lead.trainerizeId) {
-            trainerizeId = lead.trainerizeId;
+        if (lead) {
+            trainerizeId = trainerizeId || lead.trainerizeId;
+            ghlContactId = ghlContactId || lead.ghlContactId;
         }
     }
 
+    // 3. Deactivate Trainerize
     if (trainerizeId) {
         try {
             await deactivateClient(trainerizeId);
-            console.log(`Deactivated Trainerize User ${trainerizeId} (Email: ${userEmail}) due to cancellation.`);
-
-            // Cleanup local store if exists
-            if (userEmail) {
-                const users = getStoredUsers();
-                const key = userEmail.toLowerCase().trim();
-                if (users[key]) {
-                    users[key] = { ...users[key], status: 'deactivated', cancelledAt: new Date().toISOString() };
-                    saveStoredUsers(users);
-                }
-            }
-
+            console.log(`Deactivated Trainerize User ${trainerizeId}`);
         } catch (e) {
             console.error(`Failed to deactivate user ${trainerizeId}:`, e.message);
         }
-    } else {
-        console.warn(`Could not find Trainerize ID for cancelled subscription (Customer: ${stripeCustomerId}, Email: ${userEmail}). Skipping deactivation.`);
+    }
+
+    // 4. Update GHL to "Lost"
+    if (ghlContactId) {
+        try {
+            await updatePipelineStage(ghlContactId, 'Lost', 'lost');
+            // Optionally remove trial tag if they cancelled during trial
+            await manageTags(ghlContactId, [], ['Trial Community']);
+            console.log(`Marked GHL Opportunity as Lost for ${ghlContactId}`);
+        } catch (e) {
+            console.error(`Failed to update GHL for cancellation:`, e.message);
+        }
     }
 }
 
@@ -297,5 +374,6 @@ app.listen(PORT, () => {
 module.exports = {
     handleNewSubscription,
     handlePaymentFailure,
-    handleSubscriptionCancelled
+    handleSubscriptionCancelled,
+    handleSubscriptionUpdated
 };
