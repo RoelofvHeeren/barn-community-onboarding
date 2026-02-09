@@ -16,11 +16,64 @@ function App() {
   const [user, setUser] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
 
+  // Mock data for preview
+  const MOCK_RESULTS = {
+    summary: "Based on your goal to build strength and size while maintaining athleticism, we've found your perfect match.",
+    scores: [
+      {
+        program: "Power Building",
+        slug: "power-building",
+        score: 95,
+        reason: "The perfect hybrid of strength and hypertrophy training. This 4-day split focuses on the big three lifts while adding accessory work to build muscle."
+      },
+      {
+        program: "Hybrid Athlete",
+        slug: "hybrid-athlete",
+        score: 85,
+        reason: "Great for building strength, but includes more conditioning than you might need right now."
+      },
+      {
+        program: "Functional Bodybuilding",
+        slug: "functional-bodybuilding",
+        score: 80,
+        reason: "Focuses on movement quality and aesthetics, a strong runner-up."
+      },
+      {
+        program: "CrossFit",
+        slug: "crossfit",
+        score: 75,
+        reason: "High intensity functional movement, if you want more variety."
+      },
+      {
+        program: "Kettlebell Program",
+        slug: "kettlebell-program",
+        score: 70,
+        reason: "Great for home workouts or minimal equipment."
+      },
+      {
+        program: "Running Program",
+        slug: "running-program",
+        score: 65,
+        reason: "Pure endurance focus if you want to shift gears."
+      }
+    ]
+  };
+
   useEffect(() => {
-    // Check for payment success redirect
+    // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
+
+    // Payment Success
     if (urlParams.get('success') === 'true') {
       setStep('payment_success');
+      return;
+    }
+
+    // Design Preview Mode
+    if (urlParams.get('preview') === 'true') {
+      setRecommendations(MOCK_RESULTS);
+      setUser({ firstName: 'Guest', email: 'guest@example.com' });
+      setStep('results');
     }
   }, []);
 
