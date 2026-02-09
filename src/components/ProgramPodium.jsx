@@ -198,7 +198,7 @@ const ProgramPodium = ({ recommendations, user }) => {
             <header className="results-header">
                 <h1 className="primary-heading">Your Best Program Matches</h1>
                 <p className="sub-heading">Based on your answers, these programs align best with your goals, experience, and availability.</p>
-                <p className="micro-copy">You canexplore any program in more detail.</p>
+                <p className="micro-copy">You can explore any program in more detail.</p>
             </header>
 
             {/* 2. Podium Section */}
