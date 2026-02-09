@@ -24,13 +24,15 @@
   color: var(--text-primary);
   font-family: "SF Pro Display", var(--font-family);
   min-height: 100vh;
-  padding: 40px 20px 80px;
+  padding: 60px 40px 80px;
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
-  /* Extend to cover the Layout's background */
-  margin: -60px -20px 0;
-  padding-top: 100px;
-  width: calc(100% + 40px);
+  /* Position below logo with rounded corners */
+  margin: 20px auto 0;
+  width: calc(100% - 40px);
+  max-width: 1400px;
+  border-radius: 32px 32px 0 0;
+  box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.08);
 }
 
 /* 1. Header Section */
