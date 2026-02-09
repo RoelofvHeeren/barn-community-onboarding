@@ -1,17 +1,17 @@
 /* ProgramPodium.css - Apple Style Redesign */
 
 :root {
-  --app-bg: #F5F5F7;
+  --app-bg: #FFFFFF;
   --card-bg: #FFFFFF;
   --text-primary: #1D1D1F;
   --text-secondary: #86868B;
   --accent-color: #147559;
-  /* Apple Blue, or use Barn Green if preferred */
+  /* Brand Green */
   --success-green: #34C759;
   --divider: #D2D2D7;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.12);
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.18);
   --radius-lg: 24px;
   --radius-md: 18px;
   --radius-sm: 12px;
@@ -24,9 +24,13 @@
   color: var(--text-primary);
   font-family: "SF Pro Display", var(--font-family);
   min-height: 100vh;
-  padding: 60px 20px 120px;
+  padding: 40px 20px 80px;
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
+  /* Extend to cover the Layout's background */
+  margin: -60px -20px 0;
+  padding-top: 100px;
+  width: calc(100% + 40px);
 }
 
 /* 1. Header Section */
