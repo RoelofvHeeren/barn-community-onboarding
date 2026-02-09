@@ -1,4 +1,4 @@
-/* ProgramPodium.css - Apple Style Flip Cards */
+/* ProgramPodium.css - Desktop Podium + Mobile Flip */
 
 /* Global Reset */
 .podium-container {
@@ -6,20 +6,20 @@
   margin: 0;
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Enable vertical scroll for desktop */
   background: radial-gradient(circle at center, #2c3e50, #000000);
-  /* Premium Dark Background */
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   position: relative;
+  padding-bottom: 2rem;
 }
 
 /* Header */
 .podium-header {
-  position: absolute;
-  top: 40px;
-  width: 100%;
   text-align: center;
+  padding: 40px 20px;
   z-index: 10;
 }
 
@@ -30,21 +30,21 @@
   margin: 0;
   text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   color: #fff;
-  padding: 0 20px;
 }
 
-/* Carousel Track */
+/* =========================================
+   MOBILE CAROUSEL (Original Flip Style)
+   ========================================= */
 .carousel-track-container {
-  position: absolute;
-  top: 55%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  /* Existing styles for touch carousel */
+  position: relative;
   width: 100%;
   height: 500px;
   perspective: 1000px;
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 20px;
 }
 
 .carousel-track {
@@ -77,7 +77,7 @@
   transform: rotateY(180deg);
 }
 
-/* FRONT SIDE */
+/* Front & Back Faces */
 .card-front,
 .card-back {
   position: absolute;
@@ -106,8 +106,8 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 50%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+  height: 60%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
   z-index: 1;
 }
 
@@ -140,19 +140,13 @@
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s;
 }
 
-.learn-more-btn:active {
-  transform: scale(0.95);
-}
-
-/* BACK SIDE */
+/* Back Content */
 .card-back {
-  background: white;
-  color: #1a1a1a;
   transform: rotateY(180deg);
-  padding: 32px 24px;
+  padding: 30px 24px;
+  color: #1a1a1a;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -164,46 +158,41 @@
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 8px;
-  color: #000;
 }
 
 .back-tagline {
   font-size: 14px;
-  font-weight: 600;
-  color: #555;
   font-style: italic;
+  color: #555;
   margin-bottom: 16px;
 }
 
 .back-description {
   font-size: 14px;
-  line-height: 1.6;
-  color: #333;
-  margin-bottom: 24px;
+  line-height: 1.5;
+  margin-bottom: 20px;
 }
 
 .back-bullets {
   text-align: left;
-  list-style: none;
   padding: 0;
-  margin: 0 0 24px 0;
+  margin: 0;
+  list-style: none;
   font-size: 13px;
-  color: #444;
 }
 
 .back-bullets li {
   margin-bottom: 8px;
-  padding-left: 20px;
+  padding-left: 16px;
   position: relative;
 }
 
 .back-bullets li::before {
   content: "•";
-  color: #000;
-  font-size: 20px;
   position: absolute;
   left: 0;
-  top: -4px;
+  color: black;
+  font-weight: bold;
 }
 
 .close-instruction {
@@ -211,18 +200,38 @@
   font-size: 11px;
   color: #999;
   text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
-/* Floating Action Button */
+/* Pagination & Join Button (Mobile) */
+.pagination-dots {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 4px;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.dot.active {
+  background: white;
+  transform: scale(1.2);
+}
+
 .floating-action-container {
-  position: absolute;
-  bottom: 40px;
+  position: fixed;
+  bottom: 30px;
   left: 0;
   width: 100%;
   display: flex;
   justify-content: center;
-  z-index: 20;
+  z-index: 100;
 }
 
 .join-now-btn {
@@ -233,94 +242,236 @@
   border-radius: 40px;
   font-size: 18px;
   font-weight: 700;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   cursor: pointer;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s, box-shadow 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
-.join-now-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+
+/* =========================================
+   DESKTOP PODIUM LAYOUT
+   ========================================= */
+.desktop-podium-layout {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
 }
 
-.join-now-btn:active {
-  transform: translateY(0);
-}
-
-/* Pagination Dots */
-.pagination-dots {
-  position: absolute;
-  bottom: 110px;
-  /* Above Join Button */
+.podium-top-row {
+  display: flex;
+  align-items: flex-end;
+  /* Align bottom to create podium step effect */
+  justify-content: center;
+  gap: 40px;
   width: 100%;
-  text-align: center;
-  z-index: 10;
+  margin-bottom: 40px;
 }
 
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  border: none;
-  margin: 0 4px;
-  padding: 0;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.dot.active {
+/* Podium Cards */
+.podium-card {
   background: white;
-  transform: scale(1.2);
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  color: #1a1a1a;
+  transition: transform 0.3s ease;
+  cursor: pointer;
 }
 
-/* Navigation Arrows */
-.card-arrow {
+.podium-card:hover {
+  transform: translateY(-10px);
+}
+
+.podium-card img {
+  width: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Winner (Center) */
+.podium-card.winner {
+  width: 400px;
+  /* Big center card */
+  z-index: 10;
+  order: 2;
+  /* Center visually */
+  border: 4px solid gold;
+  /* Highlight winner */
+}
+
+.podium-card.winner img {
+  height: 300px;
+}
+
+/* Side Cards (2nd and 3rd) */
+.podium-card.secondary {
+  width: 300px;
+  opacity: 0.9;
+  order: 1;
+  /* Left */
+}
+
+.podium-card.secondary:last-child {
+  order: 3;
+  /* Right */
+}
+
+.podium-card.secondary img {
+  height: 200px;
+}
+
+/* Rank Badge */
+.podium-rank {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.2);
+  top: 15px;
+  left: 15px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-weight: bold;
+  font-size: 14px;
+  z-index: 5;
+}
+
+.winner .podium-rank {
+  background: gold;
+  color: black;
+  font-size: 16px;
+  padding: 8px 16px;
+}
+
+/* Podium Info */
+.podium-info {
+  padding: 24px;
+  text-align: center;
+}
+
+.winner .podium-info h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  margin: 0 0 8px 0;
+}
+
+.secondary .podium-info h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  margin: 0 0 8px 0;
+}
+
+.winner-tagline {
+  font-size: 16px;
+  font-style: italic;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.winner-score {
+  font-size: 24px;
+  font-weight: 800;
+  color: #017559;
+  margin-bottom: 12px;
+}
+
+.winner-desc {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #444;
+  margin-bottom: 24px;
+}
+
+.winner-cta {
+  background: #017559;
   color: white;
   border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  font-size: 24px;
+  padding: 12px 30px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
-  z-index: 10;
-  backdrop-filter: blur(5px);
+  width: 100%;
+}
+
+/* Others List (Grid) */
+.others-list {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.others-list h3 {
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 10px;
+}
+
+.others-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.other-program-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 15px;
   display: flex;
-  /* Ensure center alignment */
   align-items: center;
-  justify-content: center;
-  line-height: 1;
-  /* Fix vertical alignment */
+  gap: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.card-arrow.left {
-  left: 10px;
+.other-program-card:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.card-arrow.right {
-  right: 10px;
+.other-program-card img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .carousel-card-wrapper {
-    flex: 0 0 280px;
-    height: 440px;
-    margin: 0 10px;
+.other-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+}
+
+.match-pill {
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 10px;
+}
+
+/* Responsiveness */
+@media (max-width: 1023px) {
+  .desktop-podium-layout {
+    display: none;
   }
 
-  .main-title {
-    font-size: 24px;
+  .carousel-track-container {
+    display: flex;
+    /* Show carousel on mobile/tablet */
+  }
+}
+
+@media (min-width: 1024px) {
+
+  .floating-action-container.mobile-only,
+  .pagination-dots.mobile-only {
+    display: none;
   }
 
-  .join-now-btn {
-    padding: 14px 40px;
-    font-size: 16px;
+  .carousel-track-container {
+    display: none;
+    /* Hide carousel on desktop */
   }
 }
