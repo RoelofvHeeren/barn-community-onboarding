@@ -26,6 +26,12 @@ function App() {
         score: 95,
         tagline: "Train for performance, not just aesthetics.",
         reason: "Designed for advanced trainees who want to improve power, speed, agility, strength, and conditioning. This is high level training that turns you into a weapon.",
+        specs: {
+          frequency: "4 days/week",
+          duration: "60-75 mins",
+          intensity: "High",
+          focus: "Strength & Size"
+        },
         bullets: [
           "Power, speed, and agility focus",
           "Strength and conditioning combined",
@@ -38,6 +44,12 @@ function App() {
         score: 85,
         tagline: "Train like an athlete, not just a gym-goer.",
         reason: "Hybrid Athlete blends strength training with conditioning so you build muscle and real fitness at the same time. No choosing between lifting and cardio.",
+        specs: {
+          frequency: "3-4 days/week",
+          duration: "45-60 mins",
+          intensity: "Moderate-High",
+          focus: "Endurance & Power"
+        },
         bullets: [
           "Power, speed, and agility focus",
           "Improves performance and fitness",
@@ -50,6 +62,12 @@ function App() {
         score: 80,
         tagline: "Train for performance, not just aesthetics.",
         reason: "Designed for advanced trainees who want to improve power, speed, agility, strength, and conditioning. This is high level training that turns you into a weapon.",
+        specs: {
+          frequency: "3 days/week",
+          duration: "45 mins",
+          intensity: "Moderate",
+          focus: "Mobility & Strength"
+        },
         bullets: [
           "Muscle building with purpose",
           "Kettlebells, barbells, and dumbbells",
@@ -62,6 +80,12 @@ function App() {
         score: 78,
         tagline: "Build a lean, confident physique without extremes.",
         reason: "This program focuses on smart strength training to improve muscle definition, tone, and overall shape. No crazy diets, no endless cardio.",
+        specs: {
+          frequency: "4 days/week",
+          duration: "45-60 mins",
+          intensity: "Moderate",
+          focus: "Definition & Tone"
+        },
         bullets: [
           "Power, speed, and agility focus",
           "Strength and conditioning combined",
@@ -74,6 +98,12 @@ function App() {
         score: 70,
         tagline: "Train for performance, not just aesthetics.",
         reason: "Designed for advanced trainees who want to improve power, speed, agility, strength, and conditioning. This is high level training that turns you into a weapon.",
+        specs: {
+          frequency: "3-4 days/week",
+          duration: "30-45 mins",
+          intensity: "High",
+          focus: "Functional Strength"
+        },
         bullets: [
           "Power, speed, and agility focus",
           "Strength and conditioning combined",
@@ -86,6 +116,12 @@ function App() {
         score: 65,
         tagline: "Take your running seriously with structure and support.",
         reason: "This program gives you clear running sessions plus strength work to help you get faster, fitter, and more resilient. No more random runs with no progress.",
+        specs: {
+          frequency: "3-5 days/week",
+          duration: "30-90 mins",
+          intensity: "Varied",
+          focus: "Endurance & Speed"
+        },
         bullets: [
           "Power, speed, and agility focus",
           "Strength and conditioning combined",
@@ -98,6 +134,12 @@ function App() {
         score: 60,
         tagline: "Train for performance, not just aesthetics.",
         reason: "Designed for advanced trainees who want to improve power, speed, agility, strength, and conditioning. This is high level training that turns you into a weapon.",
+        specs: {
+          frequency: "3-5 days/week",
+          duration: "20-40 mins",
+          intensity: "High",
+          focus: "Body Control"
+        },
         bullets: [
           "Power, speed, and agility focus",
           "Strength and conditioning combined",

@@ -1,212 +1,180 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const MobileCarousel = ({ programs, user, onSelect }) => {
-    const [activeIndex, setActiveIndex] = useState(0);
-    const [flippedIndices, setFlippedIndices] = useState(new Set());
+// ==========================================
+// SUB-COMPONENTS
+// ==========================================
 
-    // Touch handling
-    const [touchStart, setTouchStart] = useState(0);
-    const [touchEnd, setTouchEnd] = useState(0);
+const SpecRow = ({ icon, label, value }) => (
+    <div className="spec-item">
+        <span className="spec-label">{label}</span>
+        <span className="spec-value">{value}</span>
+    </div>
+);
 
-    const handleTouchStart = (e) => setTouchStart(e.targetTouches[0].clientX);
-    const handleTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
-    const handleTouchEnd = () => {
-        if (!touchStart || !touchEnd) return;
-        const distance = touchStart - touchEnd;
-        if (distance > 50 && activeIndex < programs.length - 1) setActiveIndex(prev => prev + 1);
-        if (distance < -50 && activeIndex > 0) setActiveIndex(prev => prev - 1);
-        setTouchEnd(0);
-        setTouchStart(0);
-    };
-
-    const toggleFlip = (index, e) => {
-        e.stopPropagation();
-        const newFlipped = new Set(flippedIndices);
-        if (newFlipped.has(index)) {
-            newFlipped.delete(index);
-        } else {
-            newFlipped.add(index);
-        }
-        setFlippedIndices(newFlipped);
-    };
+const PodiumCard = ({ program, rank, onClick, isMobile }) => {
+    const isWinner = rank === 1;
 
     return (
         <div
-            className="carousel-track-container"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
+            className={`podium-card ${isWinner ? 'winner' : 'secondary'} rank-${rank}`}
+            onClick={() => onClick(program)}
         >
-            <div className="carousel-track" style={{ transform: `translateX(calc(50% - ${activeIndex * 320 + 160}px))` }}>
-                {programs.map((program, index) => {
-                    const isActive = index === activeIndex;
-                    const isFlipped = flippedIndices.has(index);
-
-                    let scale = isActive ? 1 : 0.9;
-                    let opacity = isActive ? 1 : 0.5;
-                    let zIndex = isActive ? 20 : 10;
-
-                    return (
-                        <div
-                            key={program.slug}
-                            className={`carousel-card-wrapper ${isActive ? 'active' : ''}`}
-                            style={{
-                                transform: `scale(${scale})`,
-                                opacity: opacity,
-                                zIndex: zIndex
-                            }}
-                            onClick={() => setActiveIndex(index)}
-                        >
-                            <div className={`carousel-card-inner ${isFlipped ? 'flipped' : ''}`}>
-                                {/* FRONT */}
-                                <div className="card-front">
-                                    <div className="card-image-full">
-                                        <img
-                                            src={`/programs/${program.slug}.png`}
-                                            alt={program.program}
-                                            onError={(e) => {
-                                                e.target.onerror = null;
-                                                e.target.src = `https://placehold.co/400x600/333/FFF?text=${encodeURIComponent(program.program)}`;
-                                            }}
-                                        />
-                                        <div className="card-overlay-gradient"></div>
-                                    </div>
-
-                                    <div className="card-front-content">
-                                        <h2 className="front-title">{program.program}</h2>
-                                        <button
-                                            className="learn-more-btn"
-                                            onClick={(e) => toggleFlip(index, e)}
-                                        >
-                                            Learn More
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* BACK */}
-                                <div className="card-back" onClick={(e) => toggleFlip(index, e)}>
-                                    <div className="back-content">
-                                        <h3 className="back-title">{program.program}</h3>
-                                        <p className="back-tagline">{program.tagline}</p>
-                                        <p className="back-description">{program.reason}</p>
-                                        {program.bullets && (
-                                            <ul className="back-bullets">
-                                                {program.bullets.map((bullet, i) => (
-                                                    <li key={i}>{bullet}</li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                        <div className="close-instruction">Tap to flip back</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-            {/* Pagination Dots (Mobile Only) */}
-            <div className="pagination-dots mobile-only">
-                {programs.map((_, index) => (
-                    <button
-                        key={index}
-                        className={`dot ${index === activeIndex ? 'active' : ''}`}
-                        onClick={() => setActiveIndex(index)}
-                    />
-                ))}
+            {/* 1. Ranking Indicator */}
+            <div className="ranking-badge">
+                {isWinner ? (
+                    <>
+                        <span className="trophy-icon">🏆</span> Top Recommendation
+                    </>
+                ) : (
+                    `#${rank}`
+                )}
             </div>
 
-            {/* Fixed Join Button (Mobile Only) */}
-            <div className="floating-action-container mobile-only">
-                <button className="join-now-btn" onClick={() => onSelect(programs[activeIndex])}>
-                    Join Now
+            {/* Image (Placed top for visual balance, though user listed text hierarchy first, images are crucial for "Product Box" feel) */}
+            <div className="card-image-container">
+                <img
+                    src={`/programs/${program.slug}.png`}
+                    alt={program.program}
+                    className="card-image"
+                    onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://placehold.co/600x400/f5f5f7/333?text=${program.program}`;
+                    }}
+                />
+            </div>
+
+            <div className="card-content">
+                {/* 2. Program Name */}
+                <h3 className="program-name">{program.program}</h3>
+
+                {/* 3. Value Statement */}
+                <p className="value-statement">{program.tagline || program.reason.substring(0, 60) + "..."}</p>
+
+                {/* 4. Fit Indicators (Specs) */}
+                {program.specs && (
+                    <div className="specs-grid">
+                        <div className="spec-pill">{program.specs.frequency}</div>
+                        <div className="spec-pill">{program.specs.intensity}</div>
+                        <div className="spec-pill">{program.specs.focus}</div>
+                    </div>
+                )}
+
+                {/* 5. Primary Action */}
+                <button className="view-program-btn">
+                    View Program
                 </button>
             </div>
         </div>
     );
 };
 
-const DesktopPodium = ({ programs, onSelect }) => {
-    // Top 3 programs
-    const top3 = programs.slice(0, 3);
-    const rest = programs.slice(3);
+const OtherProgramRow = ({ program, onClick }) => (
+    <div className="other-program-row" onClick={() => onClick(program)}>
+        <div className="row-image">
+            <img src={`/programs/${program.slug}.png`} alt={program.program} />
+        </div>
+        <div className="row-content">
+            <h4 className="row-title">{program.program}</h4>
+            <p className="row-desc">{program.tagline}</p>
+        </div>
+        <button className="row-action">View</button>
+    </div>
+);
 
-    // Reorder for podium visual: 2nd, 1st, 3rd
-    // Actually simpler is just 1st (Center), 2nd (Left), 3rd (Right)
-    const winner = top3[0];
-    const second = top3[1];
-    const third = top3[2];
+const ProgramModal = ({ program, onClose, onJoin }) => {
+    if (!program) return null;
 
     return (
-        <div className="desktop-podium-layout">
-            <div className="podium-top-row">
-                {/* 2nd Place */}
-                <div className="podium-card secondary">
-                    <div className="podium-rank">#2</div>
-                    <img src={`/programs/${second.slug}.png`} alt={second.program} />
-                    <div className="podium-info">
-                        <h3>{second.program}</h3>
-                        <p>{second.score}% Match</p>
-                        <button onClick={() => onSelect(second)}>View Details</button>
-                    </div>
-                </div>
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <button className="close-btn" onClick={onClose}>×</button>
 
-                {/* 1st Place (Winner) */}
-                <div className="podium-card winner">
-                    <div className="podium-rank">#1 Match</div>
-                    <img src={`/programs/${winner.slug}.png`} alt={winner.program} />
-                    <div className="podium-info">
-                        <h1>{winner.program}</h1>
-                        <p className="winner-tagline">{winner.tagline}</p>
-                        <div className="winner-score">{winner.score}% Match</div>
-                        <p className="winner-desc">{winner.reason}</p>
-                        <button className="winner-cta" onClick={() => onSelect(winner)}>Start Free Trial</button>
-                    </div>
-                </div>
-
-                {/* 3rd Place */}
-                <div className="podium-card secondary">
-                    <div className="podium-rank">#3</div>
-                    <img src={`/programs/${third.slug}.png`} alt={third.program} />
-                    <div className="podium-info">
-                        <h3>{third.program}</h3>
-                        <p>{third.score}% Match</p>
-                        <button onClick={() => onSelect(third)}>View Details</button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Rest of the programs list */}
-            <div className="others-list">
-                <h3>Other Great Matches</h3>
-                <div className="others-grid">
-                    {rest.map((program, i) => (
-                        <div key={program.slug} className="other-program-card" onClick={() => onSelect(program)}>
+                <div className="modal-scroll">
+                    <div className="modal-header">
+                        <div className="modal-image-hero">
                             <img src={`/programs/${program.slug}.png`} alt={program.program} />
-                            <div className="other-info">
-                                <h4>{program.program}</h4>
-                                <span className="match-pill">{program.score}% Match</span>
-                            </div>
                         </div>
-                    ))}
+                        <h2>{program.program}</h2>
+                        <p className="modal-tagline">{program.tagline}</p>
+                    </div>
+
+                    <div className="modal-body">
+                        <div className="modal-section">
+                            <h3>Why this fits you</h3>
+                            <p>{program.reason}</p>
+                        </div>
+
+                        {program.specs && (
+                            <div className="modal-section specs-section">
+                                <h3>Program Specs</h3>
+                                <div className="specs-list">
+                                    <SpecRow label="Frequency" value={program.specs.frequency} />
+                                    <SpecRow label="Duration" value={program.specs.duration} />
+                                    <SpecRow label="Intensity" value={program.specs.intensity} />
+                                    <SpecRow label="Focus" value={program.specs.focus} />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="modal-section">
+                            <h3>Key Benefits</h3>
+                            <ul className="benefits-list">
+                                {program.bullets && program.bullets.map((b, i) => (
+                                    <li key={i}>{b}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="modal-footer">
+                        <button className="join-modal-btn" onClick={() => onJoin(program)}>
+                            Start with this program
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
+// ==========================================
+// MAIN COMPONENT
+// ==========================================
 
 const ProgramPodium = ({ recommendations, user }) => {
     const programs = recommendations.scores;
-    const [isDesktop, setIsDesktop] = useState(false);
+    const top3 = programs.slice(0, 3);
+    const others = programs.slice(3);
+
+    // Top 3 for Podium: Winner, 2nd, 3rd
+    const winner = top3[0];
+    const second = top3[1];
+    const third = top3[2];
+
+    const [selectedProgram, setSelectedProgram] = useState(null);
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
-        const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
-        checkDesktop();
-        window.addEventListener('resize', checkDesktop);
-        return () => window.removeEventListener('resize', checkDesktop);
+        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        // Clean up body scroll lock if modal was open
+        return () => {
+            window.removeEventListener('resize', checkMobile);
+            document.body.style.overflow = 'unset';
+        };
     }, []);
 
-    const handleSelectProgram = async (program) => {
+    // Lock body scroll when modal is open
+    useEffect(() => {
+        if (selectedProgram) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+    }, [selectedProgram]);
+
+    const handleJoin = async (program) => {
         try {
             const leadData = {
                 email: user?.email || '',
@@ -224,16 +192,57 @@ const ProgramPodium = ({ recommendations, user }) => {
     };
 
     return (
-        <div className="podium-container">
-            <div className="podium-header fade-in">
-                <h1 className="main-title">We've got programs for everybody</h1>
-            </div>
+        <div className="podium-page-container">
+            {/* 1. Header Section */}
+            <header className="results-header">
+                <h1 className="primary-heading">Your Best Program Matches</h1>
+                <p className="sub-heading">Based on your answers, these programs align best with your goals, experience, and availability.</p>
+                <p className="micro-copy">You canexplore any program in more detail.</p>
+            </header>
 
-            {isDesktop ? (
-                <DesktopPodium programs={programs} onSelect={handleSelectProgram} />
-            ) : (
-                <MobileCarousel programs={programs} user={user} onSelect={handleSelectProgram} />
+            {/* 2. Podium Section */}
+            <section className="podium-section">
+                {isMobile ? (
+                    // Mobile: Vertical Stack (1, 2, 3)
+                    <div className="mobile-stack">
+                        <PodiumCard program={winner} rank={1} onClick={setSelectedProgram} isMobile={true} />
+                        {second && <PodiumCard program={second} rank={2} onClick={setSelectedProgram} isMobile={true} />}
+                        {third && <PodiumCard program={third} rank={3} onClick={setSelectedProgram} isMobile={true} />}
+                    </div>
+                ) : (
+                    // Desktop: Horizontal Podium (2, 1, 3) for visual balance
+                    <div className="desktop-podium">
+                        <div className="podium-column side">
+                            {second && <PodiumCard program={second} rank={2} onClick={setSelectedProgram} />}
+                        </div>
+                        <div className="podium-column center">
+                            <PodiumCard program={winner} rank={1} onClick={setSelectedProgram} />
+                        </div>
+                        <div className="podium-column side">
+                            {third && <PodiumCard program={third} rank={3} onClick={setSelectedProgram} />}
+                        </div>
+                    </div>
+                )}
+            </section>
+
+            {/* 3. Others Section */}
+            {others.length > 0 && (
+                <section className="others-section">
+                    <h2 className="others-title">Other Programs You May Like</h2>
+                    <div className="others-list">
+                        {others.map((p) => (
+                            <OtherProgramRow key={p.slug} program={p} onClick={setSelectedProgram} />
+                        ))}
+                    </div>
+                </section>
             )}
+
+            {/* Modal */}
+            <ProgramModal
+                program={selectedProgram}
+                onClose={() => setSelectedProgram(null)}
+                onJoin={handleJoin}
+            />
         </div>
     );
 };
