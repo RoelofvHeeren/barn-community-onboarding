@@ -1,203 +1,213 @@
-import React, { useState } from 'react';
-
-const Modal = ({ program, onClose }) => {
-    if (!program) return null;
-
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-box fade-in-up" onClick={e => e.stopPropagation()}>
-                <button
-                    className="modal-close-btn"
-                    onClick={onClose}
-                    onMouseOver={e => e.currentTarget.style.background = '#f3f4f6'}
-                    onMouseOut={e => e.currentTarget.style.background = 'none'}
-                >✕</button>
-
-                <div className="modal-image-container">
-                    <img
-                        src={`/programs/${program.slug || 'placeholder'}.png`}
-                        alt={program.program}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.style.display = 'none';
-                        }}
-                    />
-                </div>
-
-                <h3 className="modal-program-title">{program.program}</h3>
-
-                <div className="modal-tags">
-                    <div className="modal-match-badge">{program.score}% Match</div>
-                </div>
-
-                <p className="modal-description">
-                    {program.reason}
-                </p>
-
-                <button
-                    className="btn-primary modal-close-action"
-                    onClick={onClose}
-                >
-                    Close
-                </button>
-            </div>
-        </div>
-    );
-};
+import React, { useState, useEffect, useRef } from 'react';
 
 const ProgramPodium = ({ recommendations, user }) => {
-    const [modalProgram, setModalProgram] = useState(null);
-    const sortedPrograms = recommendations.scores;
-    const winner = sortedPrograms[0];
-    const runnersUp = sortedPrograms.slice(1);
+    // Flatten the data: the "winner" is just the first item, but we treat them all as slides
+    const programs = recommendations.scores;
+    const [activeIndex, setActiveIndex] = useState(0);
+    const containerRef = useRef(null);
+
+    // Touch handling for swipe
+    const [touchStart, setTouchStart] = useState(0);
+    const [touchEnd, setTouchEnd] = useState(0);
+
+    const handleTouchStart = (e) => {
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const handleTouchMove = (e) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+    };
+
+    const handleTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > 50;
+        const isRightSwipe = distance < -50;
+
+        if (isLeftSwipe && activeIndex < programs.length - 1) {
+            setActiveIndex(prev => prev + 1);
+        }
+
+        if (isRightSwipe && activeIndex > 0) {
+            setActiveIndex(prev => prev - 1);
+        }
+
+        setTouchEnd(0);
+        setTouchStart(0);
+    };
+
+    // Keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowRight' && activeIndex < programs.length - 1) {
+                setActiveIndex(prev => prev + 1);
+            }
+            if (e.key === 'ArrowLeft' && activeIndex > 0) {
+                setActiveIndex(prev => prev - 1);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [activeIndex, programs.length]);
+
+    // Handle "Select Program" intent
+    const handleSelectProgram = async (program) => {
+        try {
+            // Save lead logic (same as before)
+            const leadData = {
+                email: user?.email || '',
+                firstName: user?.firstName || '',
+                lastName: user?.lastName || '',
+                programSlug: program.slug
+            };
+            await fetch('/api/save-lead', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(leadData)
+            });
+        } catch (e) {
+            console.warn("Could not save lead intent", e);
+        }
+        // Redirect
+        window.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
+    };
 
     return (
-        <div className="podium-container">
-
-            {/* Header / Summary */}
-            <div className="podium-header fade-in-up">
-                <h2 className="podium-title">Your Perfect Match</h2>
-                <p className="podium-subtitle">
-                    {recommendations.summary}
-                </p>
-            </div>
-
-            {/* Winner Hero Section */}
-            <div className="winner-card fade-in-up">
-                {/* Image Side */}
-                <div className="winner-image-container">
-                    <img
-                        src={`/programs/${winner.slug}.png`}
-                        alt={winner.program}
-                        className="winner-image"
-                    />
-                    <div className="recommendation-badge">
-                        #1 Recommended
-                    </div>
-                </div>
-
-                {/* Content Side */}
-                <div className="winner-content">
-                    <div className="match-score-large">
-                        {winner.score}%
-                    </div>
-                    <div className="match-label">Match Score</div>
-
-                    <h3 className="winner-program-name">{winner.program}</h3>
-
-                    <p className="winner-description">{winner.reason}</p>
-
-                    <button
-                        className="btn-primary cta-button-large"
-                        onClick={async () => {
-                            // 1. Capture intent locally first
-                            try {
-                                const leadData = {
-                                    email: user?.email || '',
-                                    firstName: user?.firstName || '',
-                                    lastName: user?.lastName || '',
-                                    programSlug: winner.slug
-                                };
-
-                                // Fire and forget (or await if critical, but we want speed)
-                                // We await briefly to ensure the request leaves but default to redirect loop
-                                await fetch('/api/save-lead', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(leadData)
-                                });
-                            } catch (e) {
-                                console.warn("Could not save lead intent, proceeding to checkout anyway", e);
-                            }
-
-                            // 2. Direct redirect to Circle
-                            window.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
-
-                            /* Previous Logic (Trainerize Integration) - Kept for reference but bypassed
-                            try {
-                                const response = await fetch('/api/create-checkout-session', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        priceId: 'price_123456789', // Placeholder
-                                        successUrl: window.location.origin + '?success=true',
-                                        cancelUrl: window.location.origin,
-                                        userEmail: user?.email || 'test@example.com',
-                                        firstName: user?.firstName,
-                                        lastName: user?.lastName,
-                                        phone: user?.phone,
-                                        programSlug: winner.slug
-                                    })
-                                });
-                                const data = await response.json();
-                                if (data.url) window.location.href = data.url;
-                            } catch (error) {
-                                console.error('Checkout error:', error);
-                                alert('Something went wrong initiating checkout.');
-                            }
-                            */
-                        }}
-                    >
-                        Start 7-Day Free Trial
-                    </button>
-                </div>
-            </div>
-
-            {/* Other Options Grid */}
-            <div>
-                <h3 className="runners-up-title">Other Potential Matches</h3>
-
-                <div className="runners-up-grid">
-                    {runnersUp.map((program) => (
-                        <div
-                            key={program.program}
-                            onClick={() => setModalProgram(program)}
-                            className="glass-card runner-up-card"
-                            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-4px)'}
-                            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-                        >
-                            <div className="runner-up-image-container">
-                                <img
-                                    src={`/programs/${program.slug || 'placeholder'}.png`}
-                                    alt={program.program}
-                                    className="runner-up-image"
-                                />
-                                <div className="runner-up-match-badge">
-                                    {program.score}% Match
-                                </div>
-                            </div>
-                            <div className="runner-up-content">
-                                <h4 className="runner-up-title">{program.program}</h4>
-                                <div className="read-more-link">
-                                    Read more →
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {modalProgram && (
-                <Modal
-                    program={modalProgram}
-                    onClose={() => setModalProgram(null)}
+        <div className="carousel-container">
+            {/* Dynamic Background */}
+            <div className="carousel-background">
+                <div
+                    className="background-image"
+                    style={{ backgroundImage: `url(/programs/${programs[activeIndex].slug}.png)` }}
                 />
-            )}
+                <div className="background-overlay" />
+            </div>
 
-            <style>{`
-                @media (max-width: 900px) {
-                    .glass-card {
-                        grid-template-columns: 1fr !important;
-                    }
-                    .glass-card > div:first-child {
-                        height: 300px;
-                    }
-                    .glass-card > div:last-child {
-                        padding: 32px;
-                    }
-                }
-            `}</style>
+            {/* Header */}
+            <div className="carousel-header fade-in">
+                <img src="/logo-black.png" alt="Barn Gym" className="logo" onError={(e) => e.target.style.display = 'none'} />
+                {/* Fallback text if logo fails, but user provided logo in header before */}
+                {/* Assuming logo exists or using text */}
+                <h1 className="main-title">Your Perfect Match</h1>
+                <p className="main-subtitle">{recommendations.summary}</p>
+            </div>
+
+            {/* 3D Carousel Track */}
+            <div
+                className="carousel-track-container"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                ref={containerRef}
+            >
+                <div className="carousel-track" style={{ transform: `translateX(calc(50% - ${activeIndex * 340 + 170}px))` }}>
+                    {programs.map((program, index) => {
+                        const isActive = index === activeIndex;
+                        const distance = Math.abs(index - activeIndex);
+
+                        // Calculate scale and opacity based on distance from center
+                        let scale = 0.85;
+                        let opacity = 0.5;
+                        let zIndex = 10 - distance;
+                        let rotateY = 0;
+
+                        if (isActive) {
+                            scale = 1;
+                            opacity = 1;
+                            rotateY = 0;
+                        } else if (index < activeIndex) {
+                            rotateY = 25; // Rotate left cards 
+                        } else {
+                            rotateY = -25; // Rotate right cards
+                        }
+
+                        return (
+                            <div
+                                key={program.slug}
+                                className={`carousel-card ${isActive ? 'active' : ''}`}
+                                style={{
+                                    transform: `scale(${scale}) perspective(1000px) rotateY(${rotateY}deg)`,
+                                    opacity: opacity,
+                                    zIndex: zIndex
+                                }}
+                                onClick={() => setActiveIndex(index)}
+                            >
+                                <div className="card-inner">
+                                    <div className="card-image-container">
+                                        <img
+                                            src={`/programs/${program.slug}.png`}
+                                            alt={program.program}
+                                            className="card-image"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = 'https://placehold.co/600x400?text=Program'; // Fallback
+                                            }}
+                                        />
+                                        {index === 0 && (
+                                            <div className="top-choice-badge">#1 Match</div>
+                                        )}
+                                        <div className="match-score-badge">{program.score}% Match</div>
+                                    </div>
+
+                                    <div className="card-content">
+                                        <h2 className="program-title">{program.program}</h2>
+                                        <p className="program-tagline">{program.tagline || "Train for performance."}</p>
+
+                                        <p className="program-description">
+                                            {program.reason}
+                                        </p>
+
+                                        {program.bullets && (
+                                            <ul className="program-bullets">
+                                                {program.bullets.map((bullet, i) => (
+                                                    <li key={i}>{bullet}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+
+                                        <button
+                                            className="select-button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleSelectProgram(program);
+                                            }}
+                                        >
+                                            Start 7-Day Free Trial
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Pagination Dots */}
+            <div className="pagination-dots">
+                {programs.map((_, index) => (
+                    <button
+                        key={index}
+                        className={`dot ${index === activeIndex ? 'active' : ''}`}
+                        onClick={() => setActiveIndex(index)}
+                    />
+                ))}
+            </div>
+
+            {/* Navigation Arrows for Desktop */}
+            <button
+                className="nav-arrow left"
+                onClick={() => setActiveIndex(Math.max(0, activeIndex - 1))}
+                disabled={activeIndex === 0}
+            >
+                ←
+            </button>
+            <button
+                className="nav-arrow right"
+                onClick={() => setActiveIndex(Math.min(programs.length - 1, activeIndex + 1))}
+                disabled={activeIndex === programs.length - 1}
+            >
+                →
+            </button>
         </div>
     );
 };

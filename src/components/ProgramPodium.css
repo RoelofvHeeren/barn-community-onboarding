@@ -1,676 +1,335 @@
-/* ProgramPodium.css - Premium Design */
+/* ProgramPodium.css - 3D Carousel Redesign */
 
-.podium-container {
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 20px 60px;
-}
-
-.podium-header {
-  text-align: center;
-  margin-bottom: 48px;
-  padding: 0 16px;
-}
-
-.podium-title {
-  font-family: var(--font-heading);
-  font-size: 36px;
-  line-height: 1.2;
-  margin-bottom: 16px;
-  color: var(--color-text-primary);
-  font-weight: 800;
-}
-
-.podium-subtitle {
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--color-text-secondary);
-  font-weight: 400;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* Winner Hero Section - Premium Card */
-.winner-card {
-  display: flex;
-  flex-direction: column;
-  padding: 0 !important;
-  overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 24px;
-  margin-bottom: 48px;
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.05),
-    0 10px 25px -5px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(0, 0, 0, 0.02);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.winner-card:hover {
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.08),
-    0 20px 40px -10px rgba(0, 0, 0, 0.12),
-    0 0 0 1px rgba(0, 0, 0, 0.03);
-  transform: translateY(-2px);
-}
-
-.winner-image-container {
+/* Global Reset for this component */
+.carousel-container {
   position: relative;
-  width: 100%;
-  height: 280px;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #000;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
-.winner-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.winner-card:hover .winner-image {
-  transform: scale(1.05);
-}
-
-.recommendation-badge {
+/* Background Blur Effect */
+.carousel-background {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, #0d8a72 100%);
-  color: white;
-  padding: 8px 18px;
-  border-radius: 100px;
-  font-weight: 700;
-  font-size: 12px;
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.15),
-    0 2px 4px rgba(0, 0, 0, 0.1);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  backdrop-filter: blur(10px);
-}
-
-.winner-content {
-  padding: 32px 24px;
-  display: flex;
-  flex-direction: column;
-  background: white;
-}
-
-.match-score-large {
-  font-size: 64px;
-  font-family: var(--font-heading);
-  font-weight: 900;
-  background: linear-gradient(135deg, var(--color-primary) 0%, #0d8a72 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1;
-  margin-bottom: 6px;
-}
-
-.match-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 24px;
-}
-
-.winner-program-name {
-  font-size: 32px;
-  font-family: var(--font-heading);
-  margin-bottom: 16px;
-  line-height: 1.2;
-  color: var(--color-text-primary);
-  font-weight: 800;
-}
-
-.winner-description {
-  font-size: 16px;
-  line-height: 1.7;
-  color: var(--color-text-secondary);
-  margin-bottom: 28px;
-}
-
-.cta-button-large {
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 56px;
-  font-size: 17px;
-  font-weight: 700;
-  border-radius: 16px;
-  border: none;
-  background: linear-gradient(135deg, var(--color-primary) 0%, #0d8a72 100%);
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    0 4px 12px rgba(16, 185, 129, 0.3),
-    0 2px 4px rgba(0, 0, 0, 0.1);
-  letter-spacing: 0.3px;
+  height: 100%;
+  z-index: 0;
 }
 
-.cta-button-large:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 8px 20px rgba(16, 185, 129, 0.4),
-    0 4px 8px rgba(0, 0, 0, 0.15);
+.background-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(40px) brightness(0.6);
+  transition: background-image 0.5s ease-in-out;
 }
 
-.cta-button-large:active {
-  transform: translateY(0);
-  box-shadow:
-    0 2px 8px rgba(16, 185, 129, 0.3),
-    0 1px 2px rgba(0, 0, 0, 0.1);
+.background-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
 }
 
-/* Runners Up Grid - Premium Cards */
-.runners-up-title {
-  font-size: 24px;
-  font-weight: 800;
-  margin-bottom: 28px;
-  color: var(--color-text-primary);
+/* Header */
+.carousel-header {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 100%;
   text-align: center;
-  padding: 0 16px;
+  z-index: 10;
+  padding: 0 20px;
 }
 
-.runners-up-grid {
+.logo {
+  height: 40px;
+  margin-bottom: 16px;
+  filter: invert(1);
+  /* Ensure logo is white on dark bg */
+}
+
+.main-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.main-subtitle {
+  font-size: 16px;
+  font-weight: 300;
+  opacity: 0.8;
+}
+
+/* 3D Track */
+.carousel-track-container {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  width: 100%;
+  transform: translate(-50%, -50%);
+  height: 600px;
+  /* Container height */
+  perspective: 1000px;
+  overflow: visible;
+  z-index: 5;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  justify-content: center;
+  align-items: center;
 }
 
-.runner-up-card {
-  padding: 0 !important;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.carousel-track {
   display: flex;
-  flex-direction: column;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 20px;
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.04),
-    0 8px 16px rgba(0, 0, 0, 0.06);
+  align-items: center;
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  /* Apple-like easing */
+  /* Wait, flexbox centers items, but we need absolute positioning for 3D stack OR clever margins */
+  /* Actually with flex, we can just center the active item by translating the track */
+  gap: 0;
+  /* Gap handled by card margins/transforms */
 }
 
-.runner-up-card:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 8px 16px rgba(0, 0, 0, 0.08),
-    0 16px 32px rgba(0, 0, 0, 0.12);
-  border-color: rgba(16, 185, 129, 0.2);
-}
-
-.runner-up-card:active {
-  transform: translateY(-2px);
-}
-
-.runner-up-image-container {
-  height: 200px;
-  overflow: hidden;
+.carousel-card {
+  flex: 0 0 340px;
+  /* Fixed width for cards */
+  height: 520px;
+  margin: 0 20px;
   position: relative;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  color: #1a1a1a;
 }
 
-.runner-up-image {
+.carousel-card.active {
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+}
+
+/* Card Content Design */
+.card-image-container {
+  height: 200px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.runner-up-card:hover .runner-up-image {
-  transform: scale(1.08);
+.top-choice-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #017559;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
-.runner-up-match-badge {
+.match-score-badge {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(255, 255, 255, 0.98);
-  padding: 6px 14px;
-  border-radius: 100px;
-  font-weight: 800;
-  font-size: 12px;
-  color: var(--color-text-primary);
-  backdrop-filter: blur(12px);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.1),
-    0 1px 2px rgba(0, 0, 0, 0.06);
-}
-
-.runner-up-content {
-  padding: 20px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: white;
-}
-
-.runner-up-title {
-  font-size: 20px;
-  font-family: var(--font-heading);
-  margin-bottom: 8px;
-  color: var(--color-text-primary);
-  line-height: 1.3;
-  font-weight: 700;
-}
-
-.read-more-link {
-  margin-top: auto;
-  padding-top: 16px;
-  color: var(--color-primary);
-  font-size: 15px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: gap 0.2s ease;
-}
-
-.runner-up-card:hover .read-more-link {
-  gap: 10px;
-}
-
-/* Modal - Premium Overlay */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 1000;
-  padding: 0;
-  backdrop-filter: blur(8px);
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-.modal-box {
-  background: white;
-  border-radius: 28px 28px 0 0;
-  padding: 28px 24px 36px;
-  width: 100%;
-  max-height: 88vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow:
-    0 -10px 40px rgba(0, 0, 0, 0.3),
-    0 -4px 16px rgba(0, 0, 0, 0.2);
-  animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.modal-close-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(0, 0, 0, 0.05);
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-  color: var(--color-text-tertiary);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  z-index: 10;
-  backdrop-filter: blur(10px);
-}
-
-.modal-close-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
-  transform: rotate(90deg);
-}
-
-.modal-close-btn:active {
-  background: rgba(0, 0, 0, 0.12);
-  transform: rotate(90deg) scale(0.95);
-}
-
-.modal-image-container {
-  width: 100%;
-  height: 220px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #017559;
+  padding: 6px 12px;
   border-radius: 20px;
-  overflow: hidden;
-  margin-bottom: 24px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    0 2px 4px rgba(0, 0, 0, 0.04);
-}
-
-.modal-image-container img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-
-.modal-program-title {
-  font-size: 28px;
-  font-family: var(--font-heading);
-  color: var(--color-text-primary);
-  margin-bottom: 16px;
-  line-height: 1.2;
-  padding-right: 48px;
+  font-size: 12px;
   font-weight: 800;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.modal-tags {
+.card-content {
+  padding: 24px;
+  text-align: center;
+}
+
+.program-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1a1a1a;
+}
+
+.program-tagline {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.program-description {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #444;
+  margin-bottom: 20px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.program-bullets {
+  text-align: left;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+  font-size: 13px;
+  color: #555;
+}
+
+.program-bullets li {
+  margin-bottom: 8px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.program-bullets li::before {
+  content: "•";
+  color: #017559;
+  font-size: 20px;
+  position: absolute;
+  left: 0;
+  top: -2px;
+}
+
+.select-button {
+  background: #017559;
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.2s, background 0.2s;
+  box-shadow: 0 4px 15px rgba(1, 117, 89, 0.3);
+}
+
+.select-button:hover {
+  background: #015e47;
+  transform: scale(1.02);
+}
+
+.select-button:active {
+  transform: scale(0.98);
+}
+
+/* Pagination Dots */
+.pagination-dots {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s;
+}
+
+.dot.active {
+  background: white;
+  transform: scale(1.2);
+}
+
+/* Navigation Arrows */
+.nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 20;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
 }
 
-.modal-match-badge {
-  background: linear-gradient(135deg, var(--color-primary) 0%, #0d8a72 100%);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 100px;
-  font-weight: 700;
-  font-size: 13px;
-  box-shadow:
-    0 2px 8px rgba(16, 185, 129, 0.3),
-    0 1px 2px rgba(0, 0, 0, 0.1);
+.nav-arrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.1);
 }
 
-.modal-description {
-  font-size: 16px;
-  line-height: 1.7;
-  color: var(--color-text-secondary);
-  margin-bottom: 28px;
+.nav-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
-.modal-close-action {
-  width: 100%;
-  height: 56px;
-  font-size: 17px;
-  font-weight: 700;
-  border-radius: 16px;
-  border: none;
-  background: linear-gradient(135deg, var(--color-primary) 0%, #0d8a72 100%);
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    0 4px 12px rgba(16, 185, 129, 0.3),
-    0 2px 4px rgba(0, 0, 0, 0.1);
-  letter-spacing: 0.3px;
+.nav-arrow.left {
+  left: 40px;
 }
 
-.modal-close-action:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 8px 20px rgba(16, 185, 129, 0.4),
-    0 4px 8px rgba(0, 0, 0, 0.15);
+.nav-arrow.right {
+  right: 40px;
 }
 
-.modal-close-action:active {
-  transform: translateY(0);
-  box-shadow:
-    0 2px 8px rgba(16, 185, 129, 0.3),
-    0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* Tablet (768px+) */
-@media (min-width: 768px) {
-  .podium-container {
-    padding: 0 40px 80px;
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .carousel-card {
+    flex: 0 0 300px;
+    height: 480px;
+    margin: 0 10px;
   }
 
-  .podium-header {
-    margin-bottom: 56px;
+  .carousel-track-container {
+    height: 550px;
+    top: 55%;
   }
 
-  .podium-title {
-    font-size: 48px;
-    margin-bottom: 20px;
+  .nav-arrow {
+    display: none;
+    /* Hide arrows on mobile, rely on swipe */
   }
 
-  .podium-subtitle {
-    font-size: 18px;
+  .program-title {
+    font-size: 24px;
   }
 
-  .winner-card {
-    margin-bottom: 64px;
-    border-radius: 28px;
-  }
-
-  .winner-image-container {
-    height: 360px;
-  }
-
-  .winner-content {
-    padding: 48px 40px;
-  }
-
-  .match-score-large {
-    font-size: 72px;
-  }
-
-  .winner-program-name {
-    font-size: 40px;
-    margin-bottom: 20px;
-  }
-
-  .winner-description {
-    font-size: 18px;
-    margin-bottom: 36px;
-  }
-
-  .cta-button-large {
-    height: 60px;
-    max-width: 360px;
-    font-size: 18px;
-  }
-
-  .runners-up-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-  }
-
-  .runner-up-image-container {
-    height: 220px;
-  }
-
-  .runner-up-content {
-    padding: 24px;
-  }
-
-  .modal-overlay {
-    align-items: center;
-    padding: 24px;
-  }
-
-  .modal-box {
-    border-radius: 28px;
-    max-width: 640px;
-    max-height: 90vh;
-    padding: 40px;
-    animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  @keyframes modalFadeIn {
-    from {
-      opacity: 0;
-      transform: scale(0.96);
-    }
-
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  .modal-image-container {
-    height: 260px;
-    margin-bottom: 28px;
-    border-radius: 24px;
-  }
-
-  .modal-program-title {
-    font-size: 36px;
-  }
-
-  .modal-description {
-    font-size: 18px;
-  }
-}
-
-/* Desktop (1024px+) */
-@media (min-width: 1024px) {
-  .podium-container {
-    padding: 0 48px 100px;
-  }
-
-  .podium-header {
-    margin-bottom: 72px;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .podium-title {
-    font-size: 56px;
-    margin-bottom: 24px;
-  }
-
-  .podium-subtitle {
-    font-size: 20px;
-    line-height: 1.7;
-  }
-
-  /* Desktop Grid Layout */
-  .winner-card {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    flex-direction: unset !important;
-    gap: 0;
-    margin-bottom: 88px;
-    min-height: 540px;
-    border-radius: 32px;
-  }
-
-  .winner-image-container {
-    height: 100%;
-    min-height: 540px;
-    border-radius: 32px 0 0 32px;
-  }
-
-  .winner-image {
-    position: absolute;
-    inset: 0;
-  }
-
-  .recommendation-badge {
-    top: 24px;
-    left: 24px;
-    padding: 10px 22px;
-    font-size: 13px;
-  }
-
-  .winner-content {
-    padding: 72px 56px;
-    justify-content: center;
-  }
-
-  .match-score-large {
-    font-size: 88px;
-    margin-bottom: 10px;
-  }
-
-  .match-label {
-    font-size: 14px;
-    letter-spacing: 2.5px;
-    margin-bottom: 36px;
-  }
-
-  .winner-program-name {
-    font-size: 52px;
-    margin-bottom: 28px;
-  }
-
-  .winner-description {
-    font-size: 19px;
-    line-height: 1.8;
-    margin-bottom: 44px;
-  }
-
-  .cta-button-large {
-    height: 64px;
-    font-size: 18px;
-    max-width: 340px;
-    width: auto;
-    border-radius: 18px;
-  }
-
-  .runners-up-title {
+  .main-title {
     font-size: 28px;
-    margin-bottom: 36px;
-    padding: 0;
-  }
-
-  .runners-up-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 28px;
-  }
-
-  .runner-up-card {
-    border-radius: 24px;
-  }
-
-  .runner-up-image-container {
-    height: 240px;
-  }
-
-  .runner-up-content {
-    padding: 28px;
-  }
-
-  .runner-up-title {
-    font-size: 22px;
-    margin-bottom: 10px;
-  }
-
-  .read-more-link {
-    padding-top: 18px;
-    font-size: 16px;
   }
 }

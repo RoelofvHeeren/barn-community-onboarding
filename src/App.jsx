@@ -24,37 +24,85 @@ function App() {
         program: "Power Building",
         slug: "power-building",
         score: 95,
-        reason: "The perfect hybrid of strength and hypertrophy training. This 4-day split focuses on the big three lifts while adding accessory work to build muscle."
+        tagline: "Train for performance, not just aesthetics.",
+        reason: "Designed for advanced trainees who want to improve power, speed, agility, strength, and conditioning. This is high level training that turns you into a weapon.",
+        bullets: [
+          "Power, speed, and agility focus",
+          "Strength and conditioning combined",
+          "Built for advanced athletes"
+        ]
       },
       {
         program: "Hybrid Athlete",
         slug: "hybrid-athlete",
         score: 85,
-        reason: "Great for building strength, but includes more conditioning than you might need right now."
+        tagline: "Train like an athlete, not just a gym-goer.",
+        reason: "Hybrid Athlete blends strength training with conditioning so you build muscle and real fitness at the same time. No choosing between lifting and cardio.",
+        bullets: [
+          "Power, speed, and agility focus",
+          "Improves performance and fitness",
+          "Includes performance and fitness"
+        ]
       },
       {
         program: "Functional Bodybuilding",
         slug: "functional-bodybuilding",
         score: 80,
-        reason: "Focuses on movement quality and aesthetics, a strong runner-up."
+        tagline: "Train for performance, not just aesthetics.",
+        reason: "Designed for advanced trainees who want to improve power, speed, agility, strength, and conditioning. This is high level training that turns you into a weapon.",
+        bullets: [
+          "Muscle building with purpose",
+          "Kettlebells, barbells, and dumbbells",
+          "Strength that transfers to real life"
+        ]
       },
       {
-        program: "CrossFit",
-        slug: "crossfit",
-        score: 75,
-        reason: "High intensity functional movement, if you want more variety."
+        program: "Sculpt & Tone",
+        slug: "sculpt-tone",
+        score: 78,
+        tagline: "Build a lean, confident physique without extremes.",
+        reason: "This program focuses on smart strength training to improve muscle definition, tone, and overall shape. No crazy diets, no endless cardio.",
+        bullets: [
+          "Power, speed, and agility focus",
+          "Strength and conditioning combined",
+          "Sustainable and balanced training"
+        ]
       },
       {
         program: "Kettlebell Program",
         slug: "kettlebell-program",
         score: 70,
-        reason: "Great for home workouts or minimal equipment."
+        tagline: "Train for performance, not just aesthetics.",
+        reason: "Designed for advanced trainees who want to improve power, speed, agility, strength, and conditioning. This is high level training that turns you into a weapon.",
+        bullets: [
+          "Power, speed, and agility focus",
+          "Strength and conditioning combined",
+          "Builds power and conditioning"
+        ]
       },
       {
         program: "Running Program",
         slug: "running-program",
         score: 65,
-        reason: "Pure endurance focus if you want to shift gears."
+        tagline: "Take your running seriously with structure and support.",
+        reason: "This program gives you clear running sessions plus strength work to help you get faster, fitter, and more resilient. No more random runs with no progress.",
+        bullets: [
+          "Power, speed, and agility focus",
+          "Strength and conditioning combined",
+          "Improve pace, fitness, and endurance"
+        ]
+      },
+      {
+        program: "Bodyweight",
+        slug: "bodyweight",
+        score: 60,
+        tagline: "Train for performance, not just aesthetics.",
+        reason: "Designed for advanced trainees who want to improve power, speed, agility, strength, and conditioning. This is high level training that turns you into a weapon.",
+        bullets: [
+          "Power, speed, and agility focus",
+          "Strength and conditioning combined",
+          "Train anywhere, anytime"
+        ]
       }
     ]
   };
