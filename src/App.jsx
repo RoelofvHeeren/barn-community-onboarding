@@ -4,9 +4,10 @@ import ProgressBar from './components/ProgressBar';
 import QuestionCard from './components/QuestionCard';
 import LeadCapture from './components/LeadCapture';
 import ProgramPodium from './components/ProgramPodium';
+import ProgramSelector from './components/ProgramSelector';
 import PaymentSuccess from './components/PaymentSuccess';
 import { questions } from './data/questions';
-import { analyzeProfile } from './services/gemini';
+import { analyzeProfile, PROGRAMS } from './services/gemini';
 import { createContact } from './services/ghl';
 
 // ── Embed Helpers ──
@@ -27,6 +28,8 @@ function App() {
   const [user, setUser] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
   const [isEmbedded, setIsEmbedded] = useState(false);
+  const [flowType, setFlowType] = useState('quiz'); // 'quiz' or 'manual'
+  const [manualProgram, setManualProgram] = useState(null);
 
   // Mock data for preview
   const MOCK_RESULTS = {
@@ -187,11 +190,44 @@ function App() {
     }
   }, []);
 
-  const startJourney = () => setStep('lead_capture');
+  const startQuiz = () => {
+    setFlowType('quiz');
+    setStep('lead_capture');
+  };
 
-  const handleLeadCapture = (userData) => {
+  const startManualSelection = () => {
+    setFlowType('manual');
+    setStep('program_selection');
+  };
+
+  const handleProgramSelect = (program) => {
+    setManualProgram(program);
+    setStep('lead_capture');
+  };
+
+  const handleLeadCapture = async (userData) => {
     setUser(userData);
-    setStep('questions');
+
+    if (flowType === 'manual' && manualProgram) {
+      // Direct checkout flow
+      try {
+        await createContact({
+          ...userData,
+          programSlug: manualProgram.slug,
+          tags: ['manual_selection', manualProgram.slug]
+        });
+
+        // Redirect to checkout
+        window.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
+      } catch (err) {
+        console.error("Lead capture failed", err);
+        // Fallback redirect
+        window.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
+      }
+    } else {
+      // Quiz flow
+      setStep('questions');
+    }
   };
 
   const handleNext = (option) => {
@@ -261,24 +297,57 @@ function App() {
             color: 'var(--color-text-secondary)',
             marginBottom: '64px'
           }}>
-            Answer a few questions to get your personalized fitness plan
+            Choose how you want to get started
           </p>
 
-          <button
-            onClick={startJourney}
-            className="btn-primary"
-            style={{
-              height: '56px',
-              width: '200px'
-            }}
-          >
-            Get Started
-          </button>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <button
+              onClick={startManualSelection}
+              className="btn-secondary"
+              style={{
+                height: '56px',
+                width: '100%',
+                maxWidth: '300px',
+                background: 'rgba(255, 255, 255, 0.5)',
+                color: 'var(--color-text-primary)'
+              }}
+            >
+              I know what I want
+            </button>
+
+            <button
+              onClick={startQuiz}
+              className="btn-primary"
+              style={{
+                height: '56px',
+                width: '100%',
+                maxWidth: '300px'
+              }}
+            >
+              Help me find my program
+            </button>
+          </div>
         </div>
       )}
 
+      {step === 'program_selection' && (
+        <ProgramSelector
+          programs={PROGRAMS}
+          onSelect={handleProgramSelect}
+        />
+      )}
+
       {step === 'lead_capture' && (
-        <LeadCapture onNext={handleLeadCapture} />
+        <LeadCapture
+          onNext={handleLeadCapture}
+          submitLabel={flowType === 'manual' ? "Start 7 Day Trial" : "Begin Assessment"}
+        />
       )}
 
       {step === 'questions' && (

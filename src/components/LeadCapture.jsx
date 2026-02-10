@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-const LeadCapture = ({ onNext }) => {
-    const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '' });
+const LeadCapture = ({ onNext, submitLabel = "Begin Assessment" }) => {
+    const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '' });
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -147,6 +147,36 @@ const LeadCapture = ({ onNext }) => {
                     </p>
                 </div>
 
+                <div style={{ textAlign: 'left' }}>
+                    <label style={{
+                        display: 'block',
+                        fontSize: '12px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        marginBottom: '8px',
+                        color: 'var(--color-text-tertiary)'
+                    }}>Phone Number</label>
+                    <input
+                        type="tel"
+                        required
+                        placeholder="+1 (555) 000-0000"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        style={{
+                            width: '100%',
+                            padding: '16px',
+                            borderRadius: '12px',
+                            border: '1px solid var(--color-border)',
+                            background: 'rgba(255, 255, 255, 0.5)',
+                            fontSize: '16px',
+                            outline: 'none',
+                            transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+                        onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}
+                    />
+                </div>
+
                 <button
                     type="submit"
                     className="btn-primary"
@@ -155,7 +185,7 @@ const LeadCapture = ({ onNext }) => {
                         padding: '20px'
                     }}
                 >
-                    Begin Assessment
+                    {submitLabel}
                 </button>
             </form>
         </div>
