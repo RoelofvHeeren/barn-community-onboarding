@@ -5,9 +5,18 @@ const bodyParser = require('body-parser');
 const Stripe = require('stripe');
 const { createClient, activateProgram, deactivateClient } = require('./services/trainerize');
 const { syncContact, manageTags, updatePipelineStage } = require('./services/ghl');
+const db = require('./db');
 
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
+// Check for critical env vars
+if (!process.env.STRIPE_SECRET_KEY) {
+    console.error("❌ CRITICAL: STRIPE_SECRET_KEY is missing from environment variables.");
+}
+if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("❌ CRITICAL: STRIPE_WEBHOOK_SECRET is missing from environment variables.");
+}
 
 // Use JSON parser for all non-webhook routes
 app.use((req, res, next) => {
@@ -68,31 +77,34 @@ app.post('/api/create-checkout-session', async (req, res) => {
 });
 
 // Save generic lead (intent capture)
-app.post('/api/save-lead', (req, res) => {
+// Save generic lead (intent capture)
+app.post('/api/save-lead', async (req, res) => {
     const { email, programSlug, firstName, lastName } = req.body;
 
     if (!email || !programSlug) {
         return res.status(400).json({ error: 'Missing email or programSlug' });
     }
 
-    const users = getStoredUsers();
-
-    // Key by email (lowercase)
     const key = email.toLowerCase().trim();
 
-    users[key] = {
-        ...(users[key] || {}),
-        email: key,
-        firstName: firstName || users[key]?.firstName,
-        lastName: lastName || users[key]?.lastName,
-        programSlug: programSlug, // Store the intended program
-        updatedAt: new Date().toISOString()
-    };
-
-    saveStoredUsers(users);
-    console.log(`Lead saved: ${key} -> ${programSlug}`);
-
-    res.json({ success: true });
+    try {
+        await db.query(
+            `INSERT INTO leads (email, program_slug, first_name, last_name, updated_at)
+             VALUES ($1, $2, $3, $4, NOW())
+             ON CONFLICT (email)
+             DO UPDATE SET 
+                program_slug = EXCLUDED.program_slug,
+                first_name = COALESCE(leads.first_name, EXCLUDED.first_name),
+                last_name = COALESCE(leads.last_name, EXCLUDED.last_name),
+                updated_at = NOW()`,
+            [key, programSlug, firstName, lastName]
+        );
+        console.log(`Lead saved to DB: ${key} -> ${programSlug}`);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Error saving lead to DB:", err);
+        res.status(500).json({ error: "Database error" });
+    }
 });
 
 // 2. Stripe Webhook
@@ -160,22 +172,31 @@ async function handleNewSubscription(session) {
 
     console.log(`[Stripe Handler] Metadata Init: Program=${programSlug}, Name=${firstName} ${lastName}`);
 
-    // 1. If no program slug in metadata, check our local "users.json" bridge
-    const users = getStoredUsers();
+    // 1. If no program slug in metadata, check our DB bridge
     const key = userEmail?.toLowerCase().trim();
     let leadData = {};
 
-    console.log(`[Stripe Handler] Looking up intent in local store for key: ${key}`);
+    console.log(`[Stripe Handler] Looking up intent in DB for key: ${key}`);
 
-    if (key && users[key]) {
-        console.log(`[Stripe Handler] ✅ Found pending lead! Bridging data...`);
-        leadData = users[key];
-        programSlug = programSlug || leadData.programSlug;
-        if (firstName === 'Member') firstName = leadData.firstName || firstName;
-        if (!lastName) lastName = leadData.lastName || '';
-        console.log(`[Stripe Handler] Enhanced Data: Program=${programSlug}, Name=${firstName} ${lastName}`);
-    } else {
-        console.log(`[Stripe Handler] No pending lead found locally.`);
+    if (key) {
+        try {
+            const result = await db.query('SELECT * FROM leads WHERE email = $1', [key]);
+            if (result.rows.length > 0) {
+                console.log(`[Stripe Handler] ✅ Found pending lead! Bridging data...`);
+                leadData = result.rows[0];
+                programSlug = programSlug || leadData.program_slug;
+                if (firstName === 'Member') firstName = leadData.first_name || firstName;
+                if (!lastName) lastName = leadData.last_name || '';
+                // Note: answers are stored as JSONB in DB
+                leadData.answers = leadData.answers || {};
+
+                console.log(`[Stripe Handler] Enhanced Data: Program=${programSlug}, Name=${firstName} ${lastName}`);
+            } else {
+                console.log(`[Stripe Handler] No pending lead found locally.`);
+            }
+        } catch (err) {
+            console.error("[Stripe Handler] DB Error lookup:", err);
+        }
     }
 
     // 2. Execute Integrations
@@ -254,18 +275,20 @@ async function handleNewSubscription(session) {
             }
         }
 
-        // Update Local Store (Optional but good for fallback)
+        // Update DB Record (Optional but good for fallback)
         if (key) {
-            console.log("[Local Store] Updating user record...");
-            users[key] = {
-                ...(users[key] || {}),
-                trainerizeId,
-                ghlContactId,
-                status: 'active',
-                updatedAt: new Date().toISOString()
-            };
-            saveStoredUsers(users);
-            console.log("[Local Store] Saved.");
+            console.log("[DB] Updating user record...");
+            try {
+                await db.query(
+                    `UPDATE leads 
+                    SET trainerize_id = $1, ghl_contact_id = $2, status = 'active', updated_at = NOW()
+                    WHERE email = $3`,
+                    [trainerizeId, ghlContactId, key]
+                );
+                console.log("[DB] Saved.");
+            } catch (err) {
+                console.error("[DB] Failed to update user record:", err);
+            }
         }
 
     } else {
@@ -289,11 +312,15 @@ async function handleSubscriptionUpdated(subscription, previousAttributes) {
             ghlContactId = customer.metadata?.ghlContactId;
             programSlug = customer.metadata?.currentProgramSlug || '';
 
-            // Fallback: Check local store if not in metadata
+            // Fallback: Check DB if not in metadata
             if (!ghlContactId) {
-                const users = getStoredUsers();
                 const key = customer.email?.toLowerCase().trim();
-                ghlContactId = users[key]?.ghlContactId;
+                try {
+                    const result = await db.query('SELECT ghl_contact_id FROM leads WHERE email = $1', [key]);
+                    if (result.rows.length > 0) {
+                        ghlContactId = result.rows[0].ghl_contact_id;
+                    }
+                } catch (e) { console.error("[Update Sub] DB Error:", e); }
             }
 
             if (ghlContactId) {
@@ -349,14 +376,18 @@ async function handleSubscriptionCancelled(subscription) {
         }
     }
 
-    // 2. Fallback: Local Store
+    // 2. Fallback: DB
     if ((!trainerizeId || !ghlContactId) && userEmail) {
-        const users = getStoredUsers();
         const key = userEmail.toLowerCase().trim();
-        const lead = users[key];
-        if (lead) {
-            trainerizeId = trainerizeId || lead.trainerizeId;
-            ghlContactId = ghlContactId || lead.ghlContactId;
+        try {
+            const result = await db.query('SELECT trainerize_id, ghl_contact_id FROM leads WHERE email = $1', [key]);
+            if (result.rows.length > 0) {
+                const lead = result.rows[0];
+                trainerizeId = trainerizeId || lead.trainerize_id;
+                ghlContactId = ghlContactId || lead.ghl_contact_id;
+            }
+        } catch (e) {
+            console.error("[Cancel Sub] DB Error:", e);
         }
     }
 
@@ -383,32 +414,7 @@ async function handleSubscriptionCancelled(subscription) {
     }
 }
 
-// Helper for local store
-const fs = require('fs');
-const USERS_FILE = path.join(__dirname, 'data/users.json');
 
-function getStoredUsers() {
-    try {
-        if (fs.existsSync(USERS_FILE)) {
-            const data = fs.readFileSync(USERS_FILE, 'utf8');
-            return JSON.parse(data);
-        }
-    } catch (err) {
-        console.error("Error reading users.json:", err.message);
-    }
-    return {};
-}
-
-function saveStoredUsers(users) {
-    try {
-        if (!fs.existsSync(path.dirname(USERS_FILE))) {
-            fs.mkdirSync(path.dirname(USERS_FILE), { recursive: true });
-        }
-        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-    } catch (err) {
-        console.error("Error writing users.json:", err.message);
-    }
-}
 
 // 3. Catch-all: Serve React App for any other route
 app.get(/(.*)/, (req, res) => {

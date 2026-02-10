@@ -1,0 +1,58 @@
+/* Barn Community Design System */
+
+/* 1. FONTS & TYPOGRAPHY */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;800&family=Raleway:wght@300;400;500;600&display=swap');
+
+:root {
+    /* Font Families */
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Raleway', sans-serif;
+
+    /* Colors */
+    --color-primary: #017559;
+    --color-primary-hover: #019970;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: rgba(0, 0, 0, 0.7);
+
+    /* Backgrounds */
+    --color-card-bg: rgba(255, 255, 255, 0.45);
+    --color-border: rgba(255, 255, 255, 0.12);
+}
+
+/* 2. BACKGROUND & GLASSMORPHISM */
+.barn-glass-card {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    backdrop-filter: blur(12px);
+    /* Standard blur for glass effect */
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
+}
+
+/* 3. SHADOWS (3D Depth) */
+.barn-shadow-depth {
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.08),
+        0 4px 6px rgba(0, 0, 0, 0.04),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    /* Inner highlight for glass edge */
+    transition: box-shadow 300ms ease;
+}
+
+.barn-shadow-depth:hover {
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.12),
+        0 8px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* 4. UTILITIES */
+.text-heading-large {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    color: var(--color-primary);
+}
+
+.text-body {
+    font-family: var(--font-body);
+    color: var(--color-text-primary);
+}

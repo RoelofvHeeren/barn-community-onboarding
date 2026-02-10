@@ -1,0 +1,92 @@
+{
+  "allow_crawlers": "disabled",
+  "appearance": {
+    "icon": {
+      "name": null,
+      "type": null
+    }
+  },
+  "category": {
+    "uri": "/branches/1.0/categories/reference/Webhooks"
+  },
+  "content": {
+    "body": "<Table align={[\"left\",\"left\"]}>\n  <thead>\n    <tr>\n      <th style={{ textAlign: \"left\" }}>\n        Event Type\n      </th>\n\n      <th style={{ textAlign: \"left\" }}>\n        Description\n      </th>\n    </tr>\n  </thead>\n\n  <tbody>\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `dailyWorkout.completed`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        When a workout is marked as completed.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `dailyCardio.completed`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        When a cardio workout is marked as completed.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `goal.added`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        When a goal is added.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `goal.updated`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        When a goal is updated.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `goal.deleted`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        When a goal is deleted.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `goal.hit`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        When a client hits their goal.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `goal.dailyNutrition.hit`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        When a client hits their daily nutrition goal for the day.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `msg.received`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        This can be a 1-to-1 or group private message.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `msg.unreadCountChanged`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        Unread message count changed.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `group.mentioned`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        This happens when someone mentions your name in a group.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `trainingPlan.updated`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        There are 2 cases where this can happen. \n\n        Case 1: This happens when a trainer adds/edits the current training plan and signs out or the session ends via time-out. \n\n        Case 2: When a training plan automatically rolls over in the custom program or master program and the training plan is updated.\n      </td>\n    </tr>\n\n    <tr>\n      <td style={{ textAlign: \"left\" }}>\n        `mealPlan.updated`\n      </td>\n\n      <td style={{ textAlign: \"left\" }}>\n        When a trainer adds/edits a meal plan and signs out or the session ends via time-out.\n      </td>\n    </tr>\n  </tbody>\n</Table>",
+    "excerpt": null,
+    "link": {
+      "url": null,
+      "new_tab": false
+    },
+    "next": {
+      "description": null,
+      "pages": []
+    }
+  },
+  "metadata": {
+    "description": null,
+    "image": {
+      "uri": null,
+      "url": null
+    },
+    "keywords": null,
+    "title": null
+  },
+  "parent": {
+    "uri": null
+  },
+  "privacy": {
+    "view": "public"
+  },
+  "slug": "events",
+  "state": "current",
+  "title": "Events",
+  "type": "basic",
+  "api_config": null,
+  "api": {
+    "method": "get",
+    "path": "",
+    "schema": null,
+    "stats": {
+      "additional_properties": true,
+      "callbacks": true,
+      "circular_references": true,
+      "common_parameters": true,
+      "discriminators": true,
+      "links": true,
+      "polymorphism": true,
+      "references": true,
+      "server_variables": true,
+      "style": true,
+      "webhooks": true,
+      "xml_requests": true,
+      "xml_responses": true,
+      "xml_schemas": true
+    },
+    "source": null,
+    "uri": null,
+    "validation": {
+      "status": "invalid",
+      "reason": "Unable to locate the API definition for this file."
+    }
+  },
+  "connections": {
+    "recipes": []
+  },
+  "href": {
+    "dash": "https://dash.readme.com/project/trainerize/v1.0/refs/events",
+    "hub": "https://developers.trainerize.com/reference/events",
+    "github_url": null
+  },
+  "links": {
+    "project": "/projects/me"
+  },
+  "project": {
+    "name": "ABC Trainerize Developer Hub",
+    "subdomain": "trainerize",
+    "uri": "/projects/me"
+  },
+  "renderable": {
+    "status": true
+  },
+  "updated_at": "2025-09-16T21:22:34.467Z",
+  "uri": "/branches/1.0/reference/events"
+}

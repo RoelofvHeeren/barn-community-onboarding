@@ -1,0 +1,92 @@
+{
+  "allow_crawlers": "disabled",
+  "appearance": {
+    "icon": {
+      "name": null,
+      "type": null
+    }
+  },
+  "category": {
+    "uri": "/branches/1.0/categories/reference/Webhooks"
+  },
+  "content": {
+    "body": "## Redundancy:\n\nThere may be a slight delay when the webhook notification is sent. We will retry the send 3x before failing out . \n\n## Performance:\n\nWebhook sender has a 500 milliseconds timeout. We recommend queueing the webhook message and processing them later on.\n\n## Security Verification:\n\nWebhook request will contain an HTTP header field including a security key in it. You should use this to verify the origin of the API call to make sure it’s sending from a legitimate source.\n\n**HTTP Header:** \\\n**TR-SecretKey:** HookKey]\n**Cus\\\n**Custom HTTP Header**\n\n## Receiving a webhook notification:\n\nWebhook will be a HTTP POST with a JSON payload where applicable. \n\n```json JSON Structure\n{\n  \t\"id\": \"evt_1C2RZD2eZvKYlo2CicCsmlid\",\n    \"eventType\": \"dailyWorkout.completed\",\n \t\"created\": \"2016-01-01 12:32:12\"   // UTC time of when event happened,\n    \"data\": {\n\t    // this part is the payload\n\t    \"userID\": 123,\n\t    \"dailyWorkoutID\": 123,\n\t    \"status\": \"tracked\",\n        ….\t\t\n\t}\n}\n```",
+    "excerpt": null,
+    "link": {
+      "url": null,
+      "new_tab": false
+    },
+    "next": {
+      "description": null,
+      "pages": []
+    }
+  },
+  "metadata": {
+    "description": null,
+    "image": {
+      "uri": null,
+      "url": null
+    },
+    "keywords": null,
+    "title": null
+  },
+  "parent": {
+    "uri": null
+  },
+  "privacy": {
+    "view": "public"
+  },
+  "slug": "webhooks-v1",
+  "state": "current",
+  "title": "Overview",
+  "type": "basic",
+  "api_config": null,
+  "api": {
+    "method": "get",
+    "path": "",
+    "schema": null,
+    "stats": {
+      "additional_properties": true,
+      "callbacks": true,
+      "circular_references": true,
+      "common_parameters": true,
+      "discriminators": true,
+      "links": true,
+      "polymorphism": true,
+      "references": true,
+      "server_variables": true,
+      "style": true,
+      "webhooks": true,
+      "xml_requests": true,
+      "xml_responses": true,
+      "xml_schemas": true
+    },
+    "source": null,
+    "uri": null,
+    "validation": {
+      "status": "invalid",
+      "reason": "Unable to locate the API definition for this file."
+    }
+  },
+  "connections": {
+    "recipes": []
+  },
+  "href": {
+    "dash": "https://dash.readme.com/project/trainerize/v1.0/refs/webhooks-v1",
+    "hub": "https://developers.trainerize.com/reference/webhooks-v1",
+    "github_url": null
+  },
+  "links": {
+    "project": "/projects/me"
+  },
+  "project": {
+    "name": "ABC Trainerize Developer Hub",
+    "subdomain": "trainerize",
+    "uri": "/projects/me"
+  },
+  "renderable": {
+    "status": true
+  },
+  "updated_at": "2025-09-16T21:22:33.232Z",
+  "uri": "/branches/1.0/reference/webhooks-v1"
+}

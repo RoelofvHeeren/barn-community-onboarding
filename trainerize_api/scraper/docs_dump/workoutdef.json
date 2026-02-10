@@ -1,0 +1,92 @@
+{
+  "allow_crawlers": "enabled",
+  "appearance": {
+    "icon": {
+      "name": null,
+      "type": null
+    }
+  },
+  "category": {
+    "uri": "/branches/1.0/categories/reference/API"
+  },
+  "content": {
+    "body": null,
+    "excerpt": null,
+    "link": {
+      "url": null,
+      "new_tab": false
+    },
+    "next": {
+      "description": null,
+      "pages": []
+    }
+  },
+  "metadata": {
+    "description": null,
+    "image": {
+      "uri": null,
+      "url": null
+    },
+    "keywords": null,
+    "title": null
+  },
+  "parent": {
+    "uri": null
+  },
+  "privacy": {
+    "view": "public"
+  },
+  "slug": "workoutdef",
+  "state": "current",
+  "title": "workoutDef",
+  "type": "basic",
+  "api_config": null,
+  "api": {
+    "method": "get",
+    "path": "",
+    "schema": null,
+    "stats": {
+      "additional_properties": true,
+      "callbacks": true,
+      "circular_references": true,
+      "common_parameters": true,
+      "discriminators": true,
+      "links": true,
+      "polymorphism": true,
+      "references": true,
+      "server_variables": true,
+      "style": true,
+      "webhooks": true,
+      "xml_requests": true,
+      "xml_responses": true,
+      "xml_schemas": true
+    },
+    "source": null,
+    "uri": null,
+    "validation": {
+      "status": "invalid",
+      "reason": "Unable to locate the API definition for this file."
+    }
+  },
+  "connections": {
+    "recipes": []
+  },
+  "href": {
+    "dash": "https://dash.readme.com/project/trainerize/v1.0/refs/workoutdef",
+    "hub": "https://developers.trainerize.com/reference/workoutdef",
+    "github_url": null
+  },
+  "links": {
+    "project": "/projects/me"
+  },
+  "project": {
+    "name": "ABC Trainerize Developer Hub",
+    "subdomain": "trainerize",
+    "uri": "/projects/me"
+  },
+  "renderable": {
+    "status": true
+  },
+  "updated_at": "2025-09-16T21:22:28.891Z",
+  "uri": "/branches/1.0/reference/workoutdef"
+}

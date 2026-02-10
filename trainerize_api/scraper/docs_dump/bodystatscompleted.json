@@ -1,0 +1,92 @@
+{
+  "allow_crawlers": "disabled",
+  "appearance": {
+    "icon": {
+      "name": null,
+      "type": null
+    }
+  },
+  "category": {
+    "uri": "/branches/1.0/categories/reference/Webhooks"
+  },
+  "content": {
+    "body": "```json\n{\n    userID: [long],\n    bodystats: {\n        bodyStatusID: [long],\n        date: \"2018-01-01\",\n        weight: [decimal],\n        fat: [decimal],\n        bloodPressureDiastolic: [decimal],\n        bloodPressureSystolic: [decimal],\n        heartRate: [int],\n        unitWeight: “kg | lbs”,\n        from: \"trainerize | fitbit | nokia\"\n    }\n}\n```\n\n| Description                     |\n| :------------------------------ |\n| When a client adds a body stat. |",
+    "excerpt": null,
+    "link": {
+      "url": null,
+      "new_tab": false
+    },
+    "next": {
+      "description": null,
+      "pages": []
+    }
+  },
+  "metadata": {
+    "description": null,
+    "image": {
+      "uri": null,
+      "url": null
+    },
+    "keywords": null,
+    "title": null
+  },
+  "parent": {
+    "uri": "/branches/1.0/reference/events"
+  },
+  "privacy": {
+    "view": "public"
+  },
+  "slug": "bodystatscompleted",
+  "state": "current",
+  "title": "bodystats.completed",
+  "type": "basic",
+  "api_config": null,
+  "api": {
+    "method": "get",
+    "path": "",
+    "schema": null,
+    "stats": {
+      "additional_properties": true,
+      "callbacks": true,
+      "circular_references": true,
+      "common_parameters": true,
+      "discriminators": true,
+      "links": true,
+      "polymorphism": true,
+      "references": true,
+      "server_variables": true,
+      "style": true,
+      "webhooks": true,
+      "xml_requests": true,
+      "xml_responses": true,
+      "xml_schemas": true
+    },
+    "source": null,
+    "uri": null,
+    "validation": {
+      "status": "invalid",
+      "reason": "Unable to locate the API definition for this file."
+    }
+  },
+  "connections": {
+    "recipes": []
+  },
+  "href": {
+    "dash": "https://dash.readme.com/project/trainerize/v1.0/refs/bodystatscompleted",
+    "hub": "https://developers.trainerize.com/reference/bodystatscompleted",
+    "github_url": null
+  },
+  "links": {
+    "project": "/projects/me"
+  },
+  "project": {
+    "name": "ABC Trainerize Developer Hub",
+    "subdomain": "trainerize",
+    "uri": "/projects/me"
+  },
+  "renderable": {
+    "status": true
+  },
+  "updated_at": "2025-09-16T21:22:51.152Z",
+  "uri": "/branches/1.0/reference/bodystatscompleted"
+}

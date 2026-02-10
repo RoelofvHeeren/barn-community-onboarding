@@ -1,0 +1,92 @@
+{
+  "allow_crawlers": "disabled",
+  "appearance": {
+    "icon": {
+      "name": null,
+      "type": null
+    }
+  },
+  "category": {
+    "uri": "/branches/1.0/categories/reference/Webhooks"
+  },
+  "content": {
+    "body": "```json\n{\n    userID: [long],\n    trainingPlan: {\n        trainingPlanID: [long],\n        trainingPlanName: “Training Plan1”,\n        startDate: “2018-01-01”,\n        endDate: “2018-01-31”\n    }\n}\n```\n\n<Table align={[\"left\"]}>\n  <thead>\n    <tr>\n      <th>\n        Description\n      </th>\n    </tr>\n  </thead>\n\n  <tbody>\n    <tr>\n      <td>\n        There are 2 cases where this can happen.\n\n\n\n\n\n\n\n        Case 1: This happens when a trainer adds/edits the current training plan and signs out or the session ends via time-out.\n\n\n\n\n\n\n\n        Case 2: When a training plan automatically rolls over in the custom program or master program and the training plan is updated.\n      </td>\n    </tr>\n  </tbody>\n</Table>",
+    "excerpt": null,
+    "link": {
+      "url": null,
+      "new_tab": false
+    },
+    "next": {
+      "description": null,
+      "pages": []
+    }
+  },
+  "metadata": {
+    "description": null,
+    "image": {
+      "uri": null,
+      "url": null
+    },
+    "keywords": null,
+    "title": null
+  },
+  "parent": {
+    "uri": "/branches/1.0/reference/events"
+  },
+  "privacy": {
+    "view": "public"
+  },
+  "slug": "trainingplanupdated",
+  "state": "current",
+  "title": "trainingPlan.updated",
+  "type": "basic",
+  "api_config": null,
+  "api": {
+    "method": "get",
+    "path": "",
+    "schema": null,
+    "stats": {
+      "additional_properties": true,
+      "callbacks": true,
+      "circular_references": true,
+      "common_parameters": true,
+      "discriminators": true,
+      "links": true,
+      "polymorphism": true,
+      "references": true,
+      "server_variables": true,
+      "style": true,
+      "webhooks": true,
+      "xml_requests": true,
+      "xml_responses": true,
+      "xml_schemas": true
+    },
+    "source": null,
+    "uri": null,
+    "validation": {
+      "status": "invalid",
+      "reason": "Unable to locate the API definition for this file."
+    }
+  },
+  "connections": {
+    "recipes": []
+  },
+  "href": {
+    "dash": "https://dash.readme.com/project/trainerize/v1.0/refs/trainingplanupdated",
+    "hub": "https://developers.trainerize.com/reference/trainingplanupdated",
+    "github_url": null
+  },
+  "links": {
+    "project": "/projects/me"
+  },
+  "project": {
+    "name": "ABC Trainerize Developer Hub",
+    "subdomain": "trainerize",
+    "uri": "/projects/me"
+  },
+  "renderable": {
+    "status": true
+  },
+  "updated_at": "2025-09-16T21:22:44.462Z",
+  "uri": "/branches/1.0/reference/trainingplanupdated"
+}
