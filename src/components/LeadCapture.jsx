@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const LeadCapture = ({ onNext, submitLabel = "Begin Assessment" }) => {
+const LeadCapture = ({ onNext, onBack, submitLabel = "Begin Assessment" }) => {
     const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '' });
 
     const handleSubmit = (e) => {
@@ -18,8 +18,38 @@ const LeadCapture = ({ onNext, submitLabel = "Begin Assessment" }) => {
         <div className="glass-card fade-in-up" style={{
             padding: '64px',
             width: '100%',
-            textAlign: 'center'
+            textAlign: 'center',
+            position: 'relative'
         }}>
+            {onBack && (
+                <button
+                    onClick={onBack}
+                    style={{
+                        position: 'absolute',
+                        left: '24px',
+                        top: '24px',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--color-text-tertiary)',
+                        fontSize: '24px',
+                        cursor: 'pointer',
+                        padding: '8px',
+                        borderRadius: '50%',
+                        transition: 'background 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '40px',
+                        height: '40px'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(0,0,0,0.05)'}
+                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                    aria-label="Go Back"
+                >
+                    ←
+                </button>
+            )}
+
             <h2 style={{
                 fontSize: '32px',
                 lineHeight: '44px',
@@ -143,7 +173,7 @@ const LeadCapture = ({ onNext, submitLabel = "Begin Assessment" }) => {
                         lineHeight: '1.4',
                         fontWeight: 500
                     }}>
-                        ⚠️ Important: Please use the same email you used to sign up for the Barn Community on Circle.
+                        ⚠️ Important: Please use the email you will use for your membership.
                     </p>
                 </div>
 

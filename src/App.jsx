@@ -243,8 +243,20 @@ function App() {
   };
 
   const handleBack = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1);
+    if (step === 'program_selection') {
+      setStep('welcome');
+    } else if (step === 'lead_capture') {
+      if (flowType === 'manual') {
+        setStep('program_selection');
+      } else {
+        setStep('welcome');
+      }
+    } else if (step === 'questions') {
+      if (currentQuestionIndex > 0) {
+        setCurrentQuestionIndex(prev => prev - 1);
+      } else {
+        setStep('lead_capture');
+      }
     }
   };
 
@@ -348,12 +360,14 @@ function App() {
         <ProgramSelector
           programs={PROGRAMS}
           onSelect={handleProgramSelect}
+          onBack={handleBack}
         />
       )}
 
       {step === 'lead_capture' && (
         <LeadCapture
           onNext={handleLeadCapture}
+          onBack={handleBack}
           submitLabel={flowType === 'manual' ? "Start 7 Day Trial" : "Begin Assessment"}
         />
       )}
