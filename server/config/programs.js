@@ -6,7 +6,6 @@ const PROGRAM_MAPPING = {
     'power-building': '4835328', // Frontend: 'power-building'
     'athlete-program': '4854181', // Legacy? Kept just in case
     'running-program': '4834319', // Frontend: 'running-program'
-    '7-day-challenge': '4802280',
     // 'kettlebell-program': 'TODO', // Frontend: 'kettlebell-program'
     // 'sculpt-tone': 'TODO'         // Frontend: 'sculpt-tone'
 };
