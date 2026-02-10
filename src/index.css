@@ -145,6 +145,27 @@ button:disabled {
   color: var(--color-text-primary);
 }
 
+.btn-secondary {
+  background: #FFFFFF;
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 20px 40px;
+  border-radius: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: all 200ms ease-out;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #F5F5F7;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
 /* Animations */
 @keyframes fadeInUp {
   from {

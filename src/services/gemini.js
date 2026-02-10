@@ -141,7 +141,7 @@ export const PROGRAMS = [
 ];
 
 export const analyzeProfile = async (answers) => {
-    console.log("Analyzing answers with Gemini:", answers);
+    console.log("Analyzing answers with Gemini:", JSON.stringify(answers, null, 2));
 
     const prompt = `
     You are an expert fitness coach for 'Barn Community'. 
@@ -183,6 +183,8 @@ export const analyzeProfile = async (answers) => {
         }
 
         const data = await response.json();
+        console.log("Gemini API Raw Response:", JSON.stringify(data, null, 2)); // Debug log
+
         const resultText = data.candidates[0].content.parts[0].text;
         const result = JSON.parse(resultText);
 

@@ -2,7 +2,7 @@ import React from 'react';
 import logo from '../assets/logo.png';
 import background from '../assets/background.png';
 
-const Layout = ({ children }) => {
+const Layout = ({ children, contentMaxWidth = '600px' }) => {
   return (
     <div style={{
       position: 'relative',
@@ -56,11 +56,12 @@ const Layout = ({ children }) => {
         <main style={{
           flex: 1,
           width: '100%',
-          maxWidth: '600px',
+          maxWidth: contentMaxWidth,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '0 20px'
+          padding: '0 20px',
+          transition: 'max-width 0.3s ease'
         }}>
           {children}
         </main>

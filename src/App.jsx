@@ -264,8 +264,20 @@ function App() {
     }
   };
 
+  // Determine max width based on step
+  const getMaxWidth = () => {
+    switch (step) {
+      case 'program_selection':
+      case 'results':
+      case 'welcome':
+        return '1200px';
+      default:
+        return '600px';
+    }
+  };
+
   return (
-    <Layout>
+    <Layout contentMaxWidth={getMaxWidth()}>
       {/* Embed Close Button — visible only when body.is-embedded via CSS */}
       <button
         id="embed-close-btn"
@@ -311,14 +323,8 @@ function App() {
               onClick={startManualSelection}
               className="btn-secondary"
               style={{
-                height: '56px',
                 width: '100%',
-                maxWidth: '300px',
-                background: '#FFFFFF',
-                color: 'var(--color-primary)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                border: 'none',
-                fontWeight: 600
+                maxWidth: '300px'
               }}
             >
               I know what I want
@@ -328,7 +334,6 @@ function App() {
               onClick={startQuiz}
               className="btn-primary"
               style={{
-                height: '56px',
                 width: '100%',
                 maxWidth: '300px'
               }}
