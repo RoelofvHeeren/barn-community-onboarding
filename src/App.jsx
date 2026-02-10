@@ -314,8 +314,11 @@ function App() {
                 height: '56px',
                 width: '100%',
                 maxWidth: '300px',
-                background: 'rgba(255, 255, 255, 0.5)',
-                color: 'var(--color-text-primary)'
+                background: '#FFFFFF',
+                color: 'var(--color-primary)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                border: 'none',
+                fontWeight: 600
               }}
             >
               I know what I want

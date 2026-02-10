@@ -48,15 +48,7 @@ const ProgramSelector = ({ programs, onSelect }) => {
                 <p className="sub-heading">Choose the program that best fits your goals and lifestyle.</p>
             </header>
 
-            <section className="podium-section" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '24px',
-                padding: '0 24px',
-                width: '100%',
-                maxWidth: '1200px',
-                margin: '0 auto'
-            }}>
+            <section className="podium-section program-selector-grid">
                 {programs.map((program) => (
                     <ProgramCard
                         key={program.slug}

@@ -537,4 +537,20 @@
     height: 100vh;
     border-radius: 0;
   }
+
+  .program-selector-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px;
+  }
+}
+
+/* Program Selector Grid */
+.program-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  padding: 0 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 100px;
 }
