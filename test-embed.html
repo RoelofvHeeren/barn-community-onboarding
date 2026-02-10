@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embed Test – Barn Community Onboarding</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+        h1 { font-size: 28px; color: #333; }
+        p { color: #666; max-width: 500px; text-align: center; line-height: 1.6; }
+
+        .trigger-btn {
+            padding: 16px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: #017559;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 200ms ease;
+        }
+        .trigger-btn:hover {
+            background: #019970;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(1, 117, 89, 0.35);
+        }
+
+        /* Modal */
+        .barn-embed-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 999999;
+            justify-content: center;
+            align-items: center;
+        }
+        .barn-embed-modal.active { display: flex; }
+        .barn-modal-content {
+            width: 95%; max-width: 1100px; height: 90vh;
+            background: white; border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            animation: slideIn 400ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        iframe.barn-embed-frame { width: 100%; height: 100%; border: none; }
+
+        #log {
+            position: fixed; bottom: 16px; left: 16px;
+            background: rgba(0,0,0,0.8); color: #0f0;
+            padding: 12px 16px; border-radius: 8px;
+            font-family: monospace; font-size: 12px;
+            max-width: 400px; z-index: 9999999;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏗️ Embed Test Page</h1>
+    <p>This simulates the parent site (barn-gym.com). Click the button below to open the onboarding funnel in a modal.</p>
+    <button class="trigger-btn" onclick="openBarnModal()">Find Your Program</button>
+    <div id="log">Waiting for events...</div>
+
+    <!-- Modal -->
+    <div id="barn-modal" class="barn-embed-modal">
+        <div class="barn-modal-content">
+            <iframe
+                id="barn-iframe"
+                src="http://localhost:5173"
+                class="barn-embed-frame"
+                allow="payment"
+            ></iframe>
+        </div>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+
+        function openBarnModal() {
+            document.getElementById('barn-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            log.textContent = '✅ Modal opened';
+        }
+
+        function closeBarnModal() {
+            document.getElementById('barn-modal').classList.remove('active');
+            document.body.style.overflow = '';
+            log.textContent = '🔒 Modal closed';
+        }
+
+        // Listen for CLOSE_MODAL from iframe
+        window.addEventListener('message', function(event) {
+            log.textContent = '📨 Message received: ' + JSON.stringify(event.data);
+            if (event.data && event.data.type === 'CLOSE_MODAL') {
+                closeBarnModal();
+            }
+        });
+
+        // Click backdrop to close
+        document.getElementById('barn-modal').addEventListener('click', function(e) {
+            if (e.target.id === 'barn-modal') closeBarnModal();
+        });
+
+        // Escape key to close
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeBarnModal();
+        });
+    </script>
+</body>
+</html>

@@ -4,47 +4,47 @@ const PROGRAMS = [
     {
         name: "Power Building",
         description: "Build serious strength while adding muscle. Power Building focuses on progressing the big lifts while still training for size and power. Ideal if you want to look strong and be genuinely strong.\n\nWhat it focuses on:\n- Squat, bench, and deadlift progression\n- Strength with added hypertrophy\n- Clear structure and weekly progression",
-        slug: "power_building"
+        slug: "power-building"
     },
     {
         name: "Hybrid Athlete",
         description: "Get strong, fit, and athletic at the same time. Hybrid Athlete combines structured strength training with conditioning so you don’t have to choose between lifting and fitness.\n\nWhat it focuses on:\n- Strength and conditioning combined\n- Athletic performance and endurance\n- Balanced, all-round training",
-        slug: "hybrid_athlete"
+        slug: "hybrid-athlete"
     },
     {
         name: "Kettlebell Program",
         description: "Build a strong, functional body with minimal equipment. This program uses kettlebells to develop strength, power, muscle, and conditioning, perfect for home or gym training.\n\nWhat it focuses on:\n- Full body functional strength\n- Power and conditioning\n- Simple but effective training",
-        slug: "kettlebell_program"
+        slug: "kettlebell-program"
     },
     {
         name: "Running Program",
         description: "Run faster, feel fitter, and train with purpose. The Running Program gives you structured weekly runs plus strength work to improve performance and reduce injury risk.\n\nWhat it focuses on:\n- Structured run sessions\n- Strength for runners\n- Improved pace and endurance",
-        slug: "running_program"
+        slug: "running-program"
     },
     {
         name: "Bodyweight Program",
         description: "Get in great shape without a gym. This program uses bodyweight training to build strength, control, and conditioning using just your own body.\n\nWhat it focuses on:\n- No equipment needed\n- Full body strength and conditioning\n- Train anywhere, anytime",
-        slug: "bodyweight_program"
+        slug: "bodyweight"
     },
     {
         name: "Functional Bodybuilding",
         description: "Build muscle that actually performs. Functional Bodybuilding combines traditional lifting with functional movements so you look good and move well.\n\nWhat it focuses on:\n- Muscle building with purpose\n- Barbells, dumbbells, and kettlebells\n- Strength that carries into daily life",
-        slug: "functional_bodybuilding"
+        slug: "functional-bodybuilding"
     },
     {
         name: "Athlete Program",
         description: "Train for performance, not just aesthetics. Designed for advanced trainees who want to improve power, speed, agility, strength, and conditioning.\n\nWhat it focuses on:\n- Power, speed, and agility\n- High-level strength training\n- Athletic performance development",
-        slug: "athlete_program"
+        slug: "athlete-program"
     },
     {
         name: "Sculpted and Toned",
         description: "Build a lean, confident physique without extremes. This program focuses on smart strength training to improve muscle definition, tone, and overall shape.\n\nWhat it focuses on:\n- Lean muscle and definition\n- Full body toning\n- Sustainable, balanced training",
-        slug: "sculpted_toned"
+        slug: "sculpt-tone"
     },
     {
         name: "7-Day Challenge",
         description: "A perfect introduction to our training style. 7 days of focused workouts to get you moving and building habits.",
-        slug: "7_day_challenge"
+        slug: "7-day-challenge"
     }
 ];
 

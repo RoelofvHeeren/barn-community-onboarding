@@ -9,12 +9,24 @@ import { questions } from './data/questions';
 import { analyzeProfile } from './services/gemini';
 import { createContact } from './services/ghl';
 
+// ── Embed Helpers ──
+function notifyParent(type, data = {}) {
+  if (window.parent !== window) {
+    window.parent.postMessage({ type, data }, '*');
+  }
+}
+
+function closeEmbeddedModal() {
+  notifyParent('CLOSE_MODAL');
+}
+
 function App() {
   const [step, setStep] = useState('welcome');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [user, setUser] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
+  const [isEmbedded, setIsEmbedded] = useState(false);
 
   // Mock data for preview
   const MOCK_RESULTS = {
@@ -149,6 +161,14 @@ function App() {
     ]
   };
 
+  // ── Iframe Embed Detection ──
+  useEffect(() => {
+    if (window.parent !== window) {
+      document.body.classList.add('is-embedded');
+      setIsEmbedded(true);
+    }
+  }, []);
+
   useEffect(() => {
     // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -210,6 +230,14 @@ function App() {
 
   return (
     <Layout>
+      {/* Embed Close Button — visible only when body.is-embedded via CSS */}
+      <button
+        id="embed-close-btn"
+        onClick={closeEmbeddedModal}
+        aria-label="Close"
+      >
+        ✕
+      </button>
       {step === 'welcome' && (
         <div className="glass-card fade-in-up" style={{
           padding: '64px',
