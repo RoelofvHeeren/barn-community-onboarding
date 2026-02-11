@@ -232,7 +232,7 @@ function App() {
 
   const handleNext = (option) => {
     const currentQuestion = questions[currentQuestionIndex];
-    const newAnswers = { ...answers, [currentQuestion.id]: option.label };
+    const newAnswers = { ...answers, [currentQuestion.id]: option.value };
     setAnswers(newAnswers);
 
     if (currentQuestionIndex < questions.length - 1) {
