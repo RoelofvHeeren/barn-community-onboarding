@@ -29,8 +29,8 @@ api.interceptors.request.use(config => {
     return config;
 });
 
-async function createClient(user) {
-    console.log(`[Trainerize] Creating client for: ${user.email}`);
+async function createClient(user, programId = null) {
+    console.log(`[Trainerize] Creating client for: ${user.email}${programId ? ` with program ${programId}` : ''}`);
 
     try {
         // Trainerize /user/add requires data nested inside a "user" object
@@ -53,6 +53,16 @@ async function createClient(user) {
             user: userObj,
             sendMail: true               // Send Trainerize invite email
         };
+
+        // Include program inline — this is the ONLY way to copy actual training plan
+        // content to the user. Separate endpoints only change pointers.
+        if (programId && programId !== '00000') {
+            payload.program = {
+                programID: parseInt(programId, 10),
+                startDate: new Date().toISOString().split('T')[0]
+            };
+            console.log(`[Trainerize] Including program ${programId} in creation payload`);
+        }
 
         console.log(`[Trainerize] POST /user/add payload:`, JSON.stringify(payload));
         const res = await api.post('/user/add', payload);

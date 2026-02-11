@@ -259,20 +259,30 @@ async function handleNewSubscription(session) {
 
         // B. Trainerize Sync
         try {
-            console.log("[Trainerize Sync] ⏳ Creating Client...");
-            // Create Client
-            const client = await createClient({ email: userEmail, first_name: firstName, last_name: lastName, phone });
-            trainerizeId = client.userID || client.id;
             const programId = PROGRAM_MAPPING[programSlug];
+            console.log(`[Trainerize Sync] ⏳ Creating Client with program ${programId || 'none'}...`);
+
+            // Pass programId to createClient so training plan is copied inline
+            // This is the ONLY reliable way to assign training plan content
+            const client = await createClient(
+                { email: userEmail, first_name: firstName, last_name: lastName, phone },
+                programId
+            );
+            trainerizeId = client.userID || client.id;
 
             console.log(`[Trainerize Sync] Client Created. ID: ${trainerizeId}`);
 
-            if (trainerizeId && programId) {
-                console.log(`[Trainerize Sync] activating program ${programId}...`);
+            // If user already existed (409 fallback), program wasn't assigned inline
+            // Try activateProgram as fallback
+            if (trainerizeId && programId && client.code !== '0') {
+                console.log(`[Trainerize Sync] Existing user, assigning program ${programId} separately...`);
                 await activateProgram(trainerizeId, programId);
+            }
+
+            if (trainerizeId) {
                 console.log(`[Trainerize Sync] ✅ Successfully onboarded ${userEmail}`);
             } else {
-                console.error("[Trainerize Sync] ❌ Failed to activate: Missing User ID or Program ID mapping", { trainerizeId, programSlug });
+                console.error("[Trainerize Sync] ❌ No User ID returned", { programSlug });
             }
         } catch (e) {
             console.error("[Trainerize Sync] ❌ FAILED:", e.message);
