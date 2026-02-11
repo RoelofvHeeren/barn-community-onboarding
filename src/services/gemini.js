@@ -140,6 +140,93 @@ export const PROGRAMS = [
 
 ];
 
+const calculateDeterministicScores = (answers) => {
+    // 1. Initialize logic scores (0-100)
+    let scores = PROGRAMS.map(p => ({
+        name: p.name,
+        slug: p.slug,
+        score: 60, // Base score
+        reason: "Matches your general profile.",
+        specs: p.specs,
+        bullets: p.bullets,
+        tagline: p.tagline
+    }));
+
+    // 2. Weighting Logic
+    const goal = answers.goal;
+    const cardio = answers.cardio;
+    const equipment = answers.equipment;
+
+    scores = scores.map(p => {
+        let score = p.score;
+        let reason = p.reason;
+
+        // -- Goal Matching --
+        if (goal === 'running') {
+            if (p.slug === 'running-program') { score += 40; reason = "Perfect match for your running goals."; }
+            if (p.slug === 'hybrid-athlete') { score += 20; }
+        }
+        else if (goal === 'strength') {
+            if (p.slug === 'power-building') { score += 35; reason = "Aligns with your desire for raw strength."; }
+            if (p.slug === 'kettlebell-program') { score += 15; }
+        }
+        else if (goal === 'hypertrophy') {
+            if (p.slug === 'functional-bodybuilding') { score += 30; reason = "Great for building muscle definition."; }
+            if (p.slug === 'power-building') { score += 25; }
+        }
+        else if (goal === 'athletic') {
+            if (p.slug === 'hybrid-athlete') { score += 35; reason = "Designed exactly for athletic performance."; }
+            if (p.slug === 'athlete-program') { score += 35; }
+        }
+        else if (goal === 'fat_loss') {
+            if (p.slug === 'sculpt-tone') { score += 30; reason = "High intensity to maximize calorie burn."; }
+            if (p.slug === 'bodyweight') { score += 20; }
+            if (p.slug === 'hybrid-athlete') { score += 20; }
+        }
+        else if (goal === 'health') {
+            if (p.slug === 'functional-bodybuilding') { score += 30; }
+            if (p.slug === 'bodyweight') { score += 30; reason = "Low barrier to entry, great for health."; }
+        }
+
+        // -- Equipment Constraints (Negative Weights) --
+        if (equipment === 'none') {
+            if (p.slug === 'bodyweight') { score += 15; reason = "Perfect since you have no equipment."; }
+            else if (['power-building', 'functional-bodybuilding', 'hybrid-athlete'].includes(p.slug)) {
+                score -= 50; // Heavily penalize gym programs if no equipment
+                reason = "Requires equipment you don't have.";
+            }
+        }
+        if (equipment === 'kettlebell') {
+            if (p.slug === 'kettlebell-program') { score += 30; reason = "Matches your kettlebell equipment."; }
+            if (p.slug === 'functional-bodybuilding') { score += 10; } // often uses KBs
+        }
+
+        // -- Cardio Preference --
+        if (cardio === 'high_cardio') {
+            if (p.slug === 'running-program') { score += 10; }
+            if (p.slug === 'hybrid-athlete') { score += 10; }
+        }
+
+        return { ...p, score: Math.min(100, Math.max(0, score)), reason };
+    });
+
+    // 3. Sort
+    scores.sort((a, b) => b.score - a.score);
+
+    return {
+        summary: "Based on your specific answers, we've ranked these programs for you. Our fallback logic prioritized your goal and equipment availability.",
+        scores: scores.map(s => ({
+            program: s.name,
+            slug: s.slug,
+            score: s.score,
+            reason: s.reason,
+            specs: s.specs,
+            bullets: s.bullets,
+            tagline: s.tagline
+        }))
+    };
+};
+
 export const analyzeProfile = async (answers) => {
     console.log("Analyzing answers with Gemini:", JSON.stringify(answers, null, 2));
 
@@ -179,13 +266,20 @@ export const analyzeProfile = async (answers) => {
 
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Gemini API Error ${response.status}: ${errorText}`);
+            console.error(`Gemini API Error ${response.status}: ${errorText}`);
+            // Fallback to deterministic logic
+            console.warn("Falling back to deterministic logic due to API error.");
+            return calculateDeterministicScores(answers);
         }
 
         const data = await response.json();
-        console.log("Gemini API Raw Response:", JSON.stringify(data, null, 2)); // Debug log
+        // console.log("Gemini API Raw Response:", JSON.stringify(data, null, 2)); // Debug log - uncomment if needed
 
-        const resultText = data.candidates[0].content.parts[0].text;
+        const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!resultText) {
+            throw new Error("Invalid response format from Gemini");
+        }
+
         const result = JSON.parse(resultText);
 
         // Sort scores descending
@@ -207,20 +301,9 @@ export const analyzeProfile = async (answers) => {
         return result;
 
     } catch (error) {
-        console.error("Gemini API Error:", error);
-        // Fallback Mock if API fails
-        const errorMessage = error.message || "Unknown Error";
-        return {
-            summary: `We encountered a technical issue analyzing your profile, but here are our general recommendations based on your input.`,
-            scores: PROGRAMS.map((p, i) => ({
-                program: p.name,
-                slug: p.slug,
-                score: 95 - (i * 5),
-                reason: "Recommended based on general fitness principles.",
-                specs: p.specs,
-                bullets: p.bullets,
-                tagline: p.tagline
-            }))
-        };
+        console.error("Gemini API Exception:", error);
+        // Fallback to deterministic logic
+        console.warn("Falling back to deterministic logic due to exception.");
+        return calculateDeterministicScores(answers);
     }
 };
