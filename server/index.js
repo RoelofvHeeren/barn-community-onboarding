@@ -527,13 +527,12 @@ async function handleSubscriptionUpdated(subscription, previousAttributes) {
             console.error("Error handling subscription update:", e.message);
         }
     }
-}
 
-// Check for Trial -> Failed/Unpaid/Cancelled (Trial Expired without payment)
-if (previousAttributes?.status === 'trialing' && ['past_due', 'unpaid', 'canceled', 'incomplete_expired'].includes(subscription.status)) {
-    console.log(`[Sub Update] ⚠️ Trial expired without conversion for ${subscription.customer} (Status: ${subscription.status})`);
-    await deactivateUserFromStripeReference(subscription.customer, null, 'Trial Expiration');
-}
+    // Check for Trial -> Failed/Unpaid/Cancelled (Trial Expired without payment)
+    if (previousAttributes?.status === 'trialing' && ['past_due', 'unpaid', 'canceled', 'incomplete_expired'].includes(subscription.status)) {
+        console.log(`[Sub Update] ⚠️ Trial expired without conversion for ${subscription.customer} (Status: ${subscription.status})`);
+        await deactivateUserFromStripeReference(subscription.customer, null, 'Trial Expiration');
+    }
 }
 
 async function handlePaymentFailure(invoice) {
