@@ -33,17 +33,26 @@ async function createClient(user) {
     console.log(`[Trainerize] Creating client for: ${user.email}`);
 
     try {
-        const payload = {
+        // Trainerize /user/add requires data nested inside a "user" object
+        const userObj = {
             email: user.email,
             firstName: user.first_name || user.firstName || '',
             lastName: user.last_name || user.lastName || '',
-            role: 'client',
-            status: 'active'
+            type: 'client',                // API uses "type", not "role"
+            settings: {
+                enableSignin: true,
+                enableMessage: true
+            }
         };
 
         if (user.phone) {
-            payload.mobilePhone = user.phone;
+            userObj.phone = user.phone;
         }
+
+        const payload = {
+            user: userObj,
+            sendMail: true               // Send Trainerize invite email
+        };
 
         console.log(`[Trainerize] POST /user/add payload:`, JSON.stringify(payload));
         const res = await api.post('/user/add', payload);
@@ -89,12 +98,11 @@ async function activateProgram(clientId, programId) {
         const payload = {
             userID: parseInt(clientId, 10),
             programID: parseInt(programId, 10),
-            startDate: new Date().toISOString().split('T')[0], // today YYYY-MM-DD
-            forceMerge: true
+            startDate: new Date().toISOString().split('T')[0] // today YYYY-MM-DD
         };
 
-        console.log(`[Trainerize] POST /program/copyToUser payload:`, JSON.stringify(payload));
-        const res = await api.post('/program/copyToUser', payload);
+        console.log(`[Trainerize] POST /program/setUserProgram payload:`, JSON.stringify(payload));
+        const res = await api.post('/program/setUserProgram', payload);
         console.log(`[Trainerize] ✅ Program assigned:`, JSON.stringify(res.data));
         return true;
     } catch (error) {
