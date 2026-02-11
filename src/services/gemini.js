@@ -137,6 +137,23 @@ export const PROGRAMS = [
             "Sustainable and balanced training"
         ]
     },
+    {
+        name: "Female Functional Strength",
+        description: "A strength and conditioning program built specifically for women. Combines compound lifts, functional movement, and targeted accessory work to build real strength, improve body composition, and boost confidence in the gym.\n\nWhat it focuses on:\n- Full body strength with a female-focused approach\n- Functional movements for daily life\n- Balanced programming for longevity and results",
+        slug: "female-functional",
+        tagline: "Strength training designed for women, by coaches who understand.",
+        specs: {
+            frequency: "3-4 days/week",
+            duration: "45-60 mins",
+            intensity: "Moderate-High",
+            focus: "Strength & Conditioning"
+        },
+        bullets: [
+            "Built specifically for women",
+            "Compound lifts and functional movement",
+            "Confidence and strength combined"
+        ]
+    },
 
 ];
 
@@ -174,19 +191,23 @@ const calculateDeterministicScores = (answers) => {
             if (p.slug === 'power-building') { score += 30; reason = "Combines size and strength training."; }
             else if (p.slug === 'functional-bodybuilding') { score += 35; reason = "Great for building muscle with purpose."; }
             else if (p.slug === 'sculpt-tone') { score += 20; }
+            else if (p.slug === 'female-functional') { score += 15; }
         }
         else if (goal === 'athletic') {
             if (p.slug === 'athlete-program') { score += 35; reason = "Built for athletic performance."; }
             else if (p.slug === 'hybrid-athlete') { score += 40; reason = "Strength and conditioning combined."; }
+            else if (p.slug === 'female-functional') { score += 10; }
         }
         else if (goal === 'fat_loss') {
             if (p.slug === 'sculpt-tone') { score += 35; reason = "Lean muscle and fat burning focus."; }
+            else if (p.slug === 'female-functional') { score += 25; }
             else if (p.slug === 'bodyweight') { score += 25; }
             else if (p.slug === 'hybrid-athlete') { score += 20; }
         }
         else if (goal === 'health') {
             if (p.slug === 'functional-bodybuilding') { score += 30; reason = "Sustainable strength for daily life."; }
             else if (p.slug === 'bodyweight') { score += 30; reason = "Low barrier, great for longevity."; }
+            else if (p.slug === 'female-functional') { score += 20; }
             else if (p.slug === 'sculpt-tone') { score += 15; }
         }
 
@@ -194,12 +215,14 @@ const calculateDeterministicScores = (answers) => {
         // GENDER (+10-15 points)
         // ═══════════════════════════════════════════
         if (gender === 'female') {
+            if (p.slug === 'female-functional') { score += 25; reason = "Built specifically for women."; }
             if (p.slug === 'sculpt-tone') { score += 15; }
             if (p.slug === 'functional-bodybuilding') { score += 5; }
             if (p.slug === 'bodyweight') { score += 5; }
         }
         else if (gender === 'male') {
             if (p.slug === 'sculpt-tone') { score = 0; reason = "Not recommended for men."; }
+            if (p.slug === 'female-functional') { score = 0; reason = "Designed for women."; }
         }
 
         // ═══════════════════════════════════════════
@@ -334,14 +357,14 @@ export const analyzeProfile = async (answers) => {
     - If the user hates cardio, Running Program should score very low (under 20).
     - If the user has knee issues, Running Program should score very low (under 10).
     - If the user has no equipment, programs requiring a gym should score very low.
-    - Female users should get a boost for Sculpt & Tone.
-    - Male users should NEVER be recommended Sculpt & Tone. It is designed for women. Give it a score under 10 for men.
+    - Female users should get a strong boost for Sculpt & Tone AND Female Functional Strength.
+    - Male users should NEVER be recommended Sculpt & Tone or Female Functional Strength. These are designed for women. Give them a score under 10 for men.
 
     Available programs:
     ${JSON.stringify(PROGRAMS.map(p => ({ name: p.name, slug: p.slug, description: p.description })), null, 2)}
 
     Task:
-    1. Score the user's fit for EACH of the 8 programs on a scale of 0-100.
+    1. Score the user's fit for EACH of the 9 programs on a scale of 0-100.
     2. Write a brief 2-sentence summary of the user's profile and why the top program is the best fit.
     3. For each program, provide a short 1-sentence "reason" explaining why it does or doesn't fit.
 

@@ -160,6 +160,24 @@ function App() {
           "Strength and conditioning combined",
           "Train anywhere, anytime"
         ]
+      },
+      {
+        program: "Female Functional Strength",
+        slug: "female-functional",
+        score: 55,
+        tagline: "Strength training designed for women, by coaches who understand.",
+        reason: "A strength and conditioning program built specifically for women. Compound lifts, functional movement, and targeted accessory work for real results.",
+        specs: {
+          frequency: "3-4 days/week",
+          duration: "45-60 mins",
+          intensity: "Moderate-High",
+          focus: "Strength & Conditioning"
+        },
+        bullets: [
+          "Built specifically for women",
+          "Compound lifts and functional movement",
+          "Confidence and strength combined"
+        ]
       }
     ]
   };
