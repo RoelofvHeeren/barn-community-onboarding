@@ -141,108 +141,145 @@ export const PROGRAMS = [
 ];
 
 const calculateDeterministicScores = (answers) => {
-    // 1. Initialize logic scores (Starts at 0)
+    // Start at 0. Each answer adds points to matching programs.
     let scores = PROGRAMS.map(p => ({
         name: p.name,
         slug: p.slug,
-        score: 0, // Start at zero as requested
-        reason: "Matches your general profile.",
+        score: 0,
+        reason: "General recommendation.",
         specs: p.specs,
         bullets: p.bullets,
         tagline: p.tagline
     }));
 
-    // 2. Weighting Logic
-    const goal = answers.goal;
-    const cardio = answers.cardio;
-    const equipment = answers.equipment;
-    const limitations = answers.limitations; // Check for injuries
+    const { goal, gender, experience, frequency, duration, cardio, equipment, limitations } = answers;
 
     scores = scores.map(p => {
-        let score = p.score;
-        let reason = p.reason;
+        let score = 0;
+        let reason = "General recommendation.";
 
-        // -- Goal Matching (The biggest driver: +60 points) --
+        // ═══════════════════════════════════════════
+        // GOAL — Heaviest weight (+40 points)
+        // ═══════════════════════════════════════════
         if (goal === 'running') {
-            if (p.slug === 'running-program') { score += 70; reason = "Perfect match for your running goals."; }
-            if (p.slug === 'hybrid-athlete') { score += 40; }
+            if (p.slug === 'running-program') { score += 40; reason = "Perfect match for your running goals."; }
+            else if (p.slug === 'hybrid-athlete') { score += 15; }
         }
         else if (goal === 'strength') {
-            if (p.slug === 'power-building') { score += 70; reason = "Aligns with your desire for raw strength."; }
-            if (p.slug === 'kettlebell-program') { score += 30; }
+            if (p.slug === 'power-building') { score += 40; reason = "Built for raw strength and progression."; }
+            else if (p.slug === 'kettlebell-program') { score += 15; }
+            else if (p.slug === 'functional-bodybuilding') { score += 10; }
         }
         else if (goal === 'hypertrophy') {
-            if (p.slug === 'functional-bodybuilding') { score += 70; reason = "Great for building muscle definition."; }
-            if (p.slug === 'power-building') { score += 50; }
+            if (p.slug === 'power-building') { score += 30; reason = "Combines size and strength training."; }
+            else if (p.slug === 'functional-bodybuilding') { score += 35; reason = "Great for building muscle with purpose."; }
+            else if (p.slug === 'sculpt-tone') { score += 20; }
         }
         else if (goal === 'athletic') {
-            if (p.slug === 'hybrid-athlete') { score += 70; reason = "Designed exactly for athletic performance."; }
-            if (p.slug === 'athlete-program') { score += 60; }
+            if (p.slug === 'athlete-program') { score += 35; reason = "Built for athletic performance."; }
+            else if (p.slug === 'hybrid-athlete') { score += 40; reason = "Strength and conditioning combined."; }
         }
         else if (goal === 'fat_loss') {
-            if (p.slug === 'sculpt-tone') { score += 70; reason = "High intensity to maximize calorie burn."; }
-            if (p.slug === 'bodyweight') { score += 50; }
-            if (p.slug === 'hybrid-athlete') { score += 40; }
+            if (p.slug === 'sculpt-tone') { score += 35; reason = "Lean muscle and fat burning focus."; }
+            else if (p.slug === 'bodyweight') { score += 25; }
+            else if (p.slug === 'hybrid-athlete') { score += 20; }
         }
         else if (goal === 'health') {
-            if (p.slug === 'functional-bodybuilding') { score += 60; }
-            if (p.slug === 'bodyweight') { score += 60; reason = "Low barrier to entry, great for health."; }
+            if (p.slug === 'functional-bodybuilding') { score += 30; reason = "Sustainable strength for daily life."; }
+            else if (p.slug === 'bodyweight') { score += 30; reason = "Low barrier, great for longevity."; }
+            else if (p.slug === 'sculpt-tone') { score += 15; }
         }
 
-        // -- Equipment Constraints --
+        // ═══════════════════════════════════════════
+        // GENDER (+10-15 points)
+        // ═══════════════════════════════════════════
+        if (gender === 'female') {
+            if (p.slug === 'sculpt-tone') { score += 15; }
+            if (p.slug === 'functional-bodybuilding') { score += 5; }
+            if (p.slug === 'bodyweight') { score += 5; }
+        }
+
+        // ═══════════════════════════════════════════
+        // EXPERIENCE (+5-10 points)
+        // ═══════════════════════════════════════════
+        if (experience === 'beginner') {
+            if (p.slug === 'bodyweight') { score += 10; }
+            if (p.slug === 'sculpt-tone') { score += 5; }
+            if (p.slug === 'kettlebell-program') { score += 5; }
+            // Penalize advanced programs
+            if (p.slug === 'athlete-program') { score -= 10; }
+            if (p.slug === 'power-building') { score -= 5; }
+        }
+        else if (experience === 'advanced') {
+            if (p.slug === 'athlete-program') { score += 10; }
+            if (p.slug === 'power-building') { score += 10; }
+            if (p.slug === 'hybrid-athlete') { score += 5; }
+        }
+
+        // ═══════════════════════════════════════════
+        // EQUIPMENT — Hard disqualifiers
+        // ═══════════════════════════════════════════
         if (equipment === 'none') {
-            if (p.slug === 'bodyweight') { score += 30; reason = "Perfect since you have no equipment."; }
-            else if (['power-building', 'functional-bodybuilding', 'hybrid-athlete'].includes(p.slug)) {
-                score = 0; // Disqualify gym programs if no equipment
-                reason = "Requires equipment you don't have.";
+            if (p.slug === 'bodyweight') { score += 20; }
+            else if (p.slug === 'running-program') { score += 5; }
+            else {
+                score = 0; reason = "Requires equipment you don't have.";
             }
         }
         else if (equipment === 'kettlebell') {
-            if (p.slug === 'kettlebell-program') { score += 40; reason = "Matches your kettlebell equipment."; }
-            if (p.slug === 'functional-bodybuilding') { score += 20; }
+            if (p.slug === 'kettlebell-program') { score += 25; reason = "Matches your kettlebell setup."; }
+            else if (p.slug === 'functional-bodybuilding') { score += 10; }
+            else if (['power-building', 'athlete-program'].includes(p.slug)) {
+                score = Math.max(0, score - 15); // These need barbells
+            }
         }
         else if (equipment === 'full' || equipment === 'barbell') {
-            // Gym access boosts gym programs slightly
-            if (['power-building', 'functional-bodybuilding', 'hybrid-athlete'].includes(p.slug)) {
-                score += 10;
+            if (['power-building', 'functional-bodybuilding', 'hybrid-athlete', 'athlete-program'].includes(p.slug)) {
+                score += 5;
             }
         }
 
-        // -- Cardio Preference --
+        // ═══════════════════════════════════════════
+        // CARDIO PREFERENCE — Disqualifiers
+        // ═══════════════════════════════════════════
         if (cardio === 'low_cardio') {
-            // User hates running
-            if (p.slug === 'running-program') {
-                score = 0; // Disqualify running program
-                reason = "Not recommended as you prefer low cardio.";
-            }
-            if (p.slug === 'hybrid-athlete') { score -= 20; } // Reduce hybrid score
+            if (p.slug === 'running-program') { score = 0; reason = "You prefer minimal cardio."; }
+            if (p.slug === 'hybrid-athlete') { score = Math.max(0, score - 10); }
         }
         else if (cardio === 'high_cardio') {
-            if (p.slug === 'running-program') { score += 20; }
-            if (p.slug === 'hybrid-athlete') { score += 15; }
+            if (p.slug === 'running-program') { score += 15; }
+            if (p.slug === 'hybrid-athlete') { score += 10; }
+        }
+        else if (cardio === 'metcon') {
+            if (p.slug === 'hybrid-athlete') { score += 10; }
+            if (p.slug === 'kettlebell-program') { score += 10; }
         }
 
-        // -- Limitations / Injuries --
+        // ═══════════════════════════════════════════
+        // INJURIES — Hard disqualifiers
+        // ═══════════════════════════════════════════
         if (limitations === 'knee') {
-            if (p.slug === 'running-program') {
-                score = 0; // Protect knees
-                reason = "Not recommended due to knee limitations.";
-            }
-            if (p.slug === 'hybrid-athlete') { score -= 30; } // High impact
+            if (p.slug === 'running-program') { score = 0; reason = "Not safe with knee issues."; }
+            if (p.slug === 'hybrid-athlete') { score = Math.max(0, score - 15); }
+            if (p.slug === 'athlete-program') { score = Math.max(0, score - 10); }
         }
         if (limitations === 'shoulder') {
-            // Olympic lifting might be tough
-            if (p.slug === 'athlete-program') { score -= 20; }
+            if (p.slug === 'athlete-program') { score = Math.max(0, score - 15); }
+            if (p.slug === 'power-building') { score = Math.max(0, score - 10); }
+        }
+        if (limitations === 'back') {
+            if (p.slug === 'power-building') { score = Math.max(0, score - 15); }
+            if (p.slug === 'athlete-program') { score = Math.max(0, score - 10); }
+            if (p.slug === 'bodyweight') { score += 5; }
         }
 
         return { ...p, score: Math.min(100, Math.max(0, score)), reason };
     });
 
-    // 3. Sort
     scores.sort((a, b) => b.score - a.score);
 
     return {
-        summary: "Based on your specific answers, we've ranked these programs for you. Our logic prioritized your main goal and filtered out programs that don't match your equipment or preferences.",
+        summary: "Based on your answers, we've matched you with the programs that fit your goals, equipment, and preferences.",
         scores: scores.map(s => ({
             program: s.name,
             slug: s.slug,
@@ -255,34 +292,66 @@ const calculateDeterministicScores = (answers) => {
     };
 };
 
+// Map answer values to human-readable descriptions for the AI prompt
+const ANSWER_KEY_MAP = {
+    goal: { running: "Run Faster & Further", fat_loss: "Lose Body Fat & Get Lean", hypertrophy: "Build Muscle & Size", strength: "Build Raw Strength", athletic: "Improve Athletic Performance", health: "Functional Health & Longevity" },
+    gender: { male: "Male", female: "Female" },
+    experience: { beginner: "Beginner (0-1 years)", intermediate: "Intermediate (1-3 years)", advanced: "Advanced (3+ years)" },
+    frequency: { low: "2-3 days/week", moderate: "3-4 days/week", high: "4-5 days/week", athlete: "6+ days/week" },
+    duration: { short: "30-45 minutes", medium: "45-60 minutes", long: "60-90 minutes", extra_long: "90+ minutes" },
+    cardio: { high_cardio: "Loves cardio/running", mixed_cardio: "Doesn't mind cardio mixed in", metcon: "Prefers conditioning circuits (Metcons)", low_cardio: "Hates cardio, keep it minimal" },
+    equipment: { full: "Full Gym (Barbells, Machines, DBs)", kettlebell: "Kettlebells mainly", barbell: "Barbell & Plates only", none: "Bodyweight only, no equipment" },
+    limitations: { none: "No injuries", knee: "Lower Body / Knee Issues", shoulder: "Upper Body / Shoulder Issues", back: "Back Issues" }
+};
+
+const humanizeAnswers = (answers) => {
+    const result = {};
+    for (const [key, value] of Object.entries(answers)) {
+        result[key] = ANSWER_KEY_MAP[key]?.[value] || value;
+    }
+    return result;
+};
+
 export const analyzeProfile = async (answers) => {
     console.log("Analyzing answers with Gemini:", JSON.stringify(answers, null, 2));
 
-    const prompt = `
-    You are an expert fitness coach for 'Barn Community'. 
-    Analyze the following user profile based on their answers to onboarding questions:
-    ${JSON.stringify(answers, null, 2)}
+    // Convert machine values to human-readable for the AI
+    const readableAnswers = humanizeAnswers(answers);
 
-    We have 8 specific programs:
-    ${JSON.stringify(PROGRAMS.map(p => ({ name: p.name, description: p.description })), null, 2)}
+    const prompt = `
+    You are an expert fitness coach for 'Barn Community'.
+    A user has completed an onboarding quiz. Here are their answers:
+    ${JSON.stringify(readableAnswers, null, 2)}
+
+    CRITICAL RULES for scoring:
+    - The user's PRIMARY GOAL is the most important factor. The program that best matches their goal should score highest.
+    - If the user's goal is "Run Faster & Further", the Running Program MUST be the top recommendation.
+    - If the user's goal is "Build Raw Strength", Power Building MUST be the top recommendation.
+    - If the user's goal is "Improve Athletic Performance", Hybrid Athlete or Athlete Program MUST be top.
+    - If the user hates cardio, Running Program should score very low (under 20).
+    - If the user has knee issues, Running Program should score very low (under 10).
+    - If the user has no equipment, programs requiring a gym should score very low.
+    - Female users should get a boost for Sculpt & Tone.
+
+    Available programs:
+    ${JSON.stringify(PROGRAMS.map(p => ({ name: p.name, slug: p.slug, description: p.description })), null, 2)}
 
     Task:
     1. Score the user's fit for EACH of the 8 programs on a scale of 0-100.
     2. Write a brief 2-sentence summary of the user's profile and why the top program is the best fit.
-    3. For the top 3 programs, provide a short 1-sentence "Why this fits" reason.
+    3. For each program, provide a short 1-sentence "reason" explaining why it does or doesn't fit.
 
     Output STRICT JSON format:
     {
       "summary": "...",
       "scores": [
-        { "program": "Program Name", "slug": "program_slug", "score": 95, "reason": "..." }
+        { "program": "Program Name", "slug": "program-slug", "score": 95, "reason": "..." }
       ]
     }
     ENSURE 'slug' matches the program slug exactly from the list provided.
   `;
 
     try {
-        // Using gemini-2.0-flash for better stability and speed
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -295,13 +364,11 @@ export const analyzeProfile = async (answers) => {
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Gemini API Error ${response.status}: ${errorText}`);
-            // Fallback to deterministic logic
-            console.warn("Falling back to deterministic logic due to API error.");
+            console.warn("Falling back to deterministic scoring.");
             return calculateDeterministicScores(answers);
         }
 
         const data = await response.json();
-        // console.log("Gemini API Raw Response:", JSON.stringify(data, null, 2)); // Debug log - uncomment if needed
 
         const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!resultText) {
@@ -313,13 +380,12 @@ export const analyzeProfile = async (answers) => {
         // Sort scores descending
         result.scores.sort((a, b) => b.score - a.score);
 
-        // Ensure slugs are correct and merge rich defaults if AI missed them
+        // Ensure slugs are correct and merge rich defaults
         result.scores = result.scores.map(s => {
             const prog = PROGRAMS.find(p => p.name === s.program);
             return {
                 ...s,
                 slug: prog ? prog.slug : s.slug,
-                // Fallback to default rich data if AI didn't generate it or generated it poorly
                 specs: s.specs || (prog ? prog.specs : undefined),
                 bullets: s.bullets || (prog ? prog.bullets : undefined),
                 tagline: s.tagline || (prog ? prog.tagline : undefined)
@@ -330,8 +396,7 @@ export const analyzeProfile = async (answers) => {
 
     } catch (error) {
         console.error("Gemini API Exception:", error);
-        // Fallback to deterministic logic
-        console.warn("Falling back to deterministic logic due to exception.");
+        console.warn("Falling back to deterministic scoring.");
         return calculateDeterministicScores(answers);
     }
 };
