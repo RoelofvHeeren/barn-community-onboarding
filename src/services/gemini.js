@@ -141,11 +141,11 @@ export const PROGRAMS = [
 ];
 
 const calculateDeterministicScores = (answers) => {
-    // 1. Initialize logic scores (0-100)
+    // 1. Initialize logic scores (Starts at 0)
     let scores = PROGRAMS.map(p => ({
         name: p.name,
         slug: p.slug,
-        score: 60, // Base score
+        score: 0, // Start at zero as requested
         reason: "Matches your general profile.",
         specs: p.specs,
         bullets: p.bullets,
@@ -156,55 +156,83 @@ const calculateDeterministicScores = (answers) => {
     const goal = answers.goal;
     const cardio = answers.cardio;
     const equipment = answers.equipment;
+    const limitations = answers.limitations; // Check for injuries
 
     scores = scores.map(p => {
         let score = p.score;
         let reason = p.reason;
 
-        // -- Goal Matching --
+        // -- Goal Matching (The biggest driver: +60 points) --
         if (goal === 'running') {
-            if (p.slug === 'running-program') { score += 40; reason = "Perfect match for your running goals."; }
-            if (p.slug === 'hybrid-athlete') { score += 20; }
+            if (p.slug === 'running-program') { score += 70; reason = "Perfect match for your running goals."; }
+            if (p.slug === 'hybrid-athlete') { score += 40; }
         }
         else if (goal === 'strength') {
-            if (p.slug === 'power-building') { score += 35; reason = "Aligns with your desire for raw strength."; }
-            if (p.slug === 'kettlebell-program') { score += 15; }
+            if (p.slug === 'power-building') { score += 70; reason = "Aligns with your desire for raw strength."; }
+            if (p.slug === 'kettlebell-program') { score += 30; }
         }
         else if (goal === 'hypertrophy') {
-            if (p.slug === 'functional-bodybuilding') { score += 30; reason = "Great for building muscle definition."; }
-            if (p.slug === 'power-building') { score += 25; }
+            if (p.slug === 'functional-bodybuilding') { score += 70; reason = "Great for building muscle definition."; }
+            if (p.slug === 'power-building') { score += 50; }
         }
         else if (goal === 'athletic') {
-            if (p.slug === 'hybrid-athlete') { score += 35; reason = "Designed exactly for athletic performance."; }
-            if (p.slug === 'athlete-program') { score += 35; }
+            if (p.slug === 'hybrid-athlete') { score += 70; reason = "Designed exactly for athletic performance."; }
+            if (p.slug === 'athlete-program') { score += 60; }
         }
         else if (goal === 'fat_loss') {
-            if (p.slug === 'sculpt-tone') { score += 30; reason = "High intensity to maximize calorie burn."; }
-            if (p.slug === 'bodyweight') { score += 20; }
-            if (p.slug === 'hybrid-athlete') { score += 20; }
+            if (p.slug === 'sculpt-tone') { score += 70; reason = "High intensity to maximize calorie burn."; }
+            if (p.slug === 'bodyweight') { score += 50; }
+            if (p.slug === 'hybrid-athlete') { score += 40; }
         }
         else if (goal === 'health') {
-            if (p.slug === 'functional-bodybuilding') { score += 30; }
-            if (p.slug === 'bodyweight') { score += 30; reason = "Low barrier to entry, great for health."; }
+            if (p.slug === 'functional-bodybuilding') { score += 60; }
+            if (p.slug === 'bodyweight') { score += 60; reason = "Low barrier to entry, great for health."; }
         }
 
-        // -- Equipment Constraints (Negative Weights) --
+        // -- Equipment Constraints --
         if (equipment === 'none') {
-            if (p.slug === 'bodyweight') { score += 15; reason = "Perfect since you have no equipment."; }
+            if (p.slug === 'bodyweight') { score += 30; reason = "Perfect since you have no equipment."; }
             else if (['power-building', 'functional-bodybuilding', 'hybrid-athlete'].includes(p.slug)) {
-                score -= 50; // Heavily penalize gym programs if no equipment
+                score = 0; // Disqualify gym programs if no equipment
                 reason = "Requires equipment you don't have.";
             }
         }
-        if (equipment === 'kettlebell') {
-            if (p.slug === 'kettlebell-program') { score += 30; reason = "Matches your kettlebell equipment."; }
-            if (p.slug === 'functional-bodybuilding') { score += 10; } // often uses KBs
+        else if (equipment === 'kettlebell') {
+            if (p.slug === 'kettlebell-program') { score += 40; reason = "Matches your kettlebell equipment."; }
+            if (p.slug === 'functional-bodybuilding') { score += 20; }
+        }
+        else if (equipment === 'full' || equipment === 'barbell') {
+            // Gym access boosts gym programs slightly
+            if (['power-building', 'functional-bodybuilding', 'hybrid-athlete'].includes(p.slug)) {
+                score += 10;
+            }
         }
 
         // -- Cardio Preference --
-        if (cardio === 'high_cardio') {
-            if (p.slug === 'running-program') { score += 10; }
-            if (p.slug === 'hybrid-athlete') { score += 10; }
+        if (cardio === 'low_cardio') {
+            // User hates running
+            if (p.slug === 'running-program') {
+                score = 0; // Disqualify running program
+                reason = "Not recommended as you prefer low cardio.";
+            }
+            if (p.slug === 'hybrid-athlete') { score -= 20; } // Reduce hybrid score
+        }
+        else if (cardio === 'high_cardio') {
+            if (p.slug === 'running-program') { score += 20; }
+            if (p.slug === 'hybrid-athlete') { score += 15; }
+        }
+
+        // -- Limitations / Injuries --
+        if (limitations === 'knee') {
+            if (p.slug === 'running-program') {
+                score = 0; // Protect knees
+                reason = "Not recommended due to knee limitations.";
+            }
+            if (p.slug === 'hybrid-athlete') { score -= 30; } // High impact
+        }
+        if (limitations === 'shoulder') {
+            // Olympic lifting might be tough
+            if (p.slug === 'athlete-program') { score -= 20; }
         }
 
         return { ...p, score: Math.min(100, Math.max(0, score)), reason };
@@ -214,7 +242,7 @@ const calculateDeterministicScores = (answers) => {
     scores.sort((a, b) => b.score - a.score);
 
     return {
-        summary: "Based on your specific answers, we've ranked these programs for you. Our fallback logic prioritized your goal and equipment availability.",
+        summary: "Based on your specific answers, we've ranked these programs for you. Our logic prioritized your main goal and filtered out programs that don't match your equipment or preferences.",
         scores: scores.map(s => ({
             program: s.name,
             slug: s.slug,
