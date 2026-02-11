@@ -30,40 +30,58 @@ api.interceptors.request.use(config => {
 });
 
 async function createClient(user) {
-    console.log(`Creating Trainerize client for: ${user.email}`);
+    console.log(`[Trainerize] Creating client for: ${user.email}`);
 
     try {
         const payload = {
             email: user.email,
-            first_name: user.first_name,
-            last_name: user.last_name,
+            firstName: user.first_name || user.firstName || '',
+            lastName: user.last_name || user.lastName || '',
             role: 'client',
             status: 'active'
         };
 
         if (user.phone) {
-            payload.mobile_phone = user.phone;
+            payload.mobilePhone = user.phone;
         }
 
-        const res = await api.post('/users', payload);
-        console.log('Client created successfully:', res.data);
+        console.log(`[Trainerize] POST /user/add payload:`, JSON.stringify(payload));
+        const res = await api.post('/user/add', payload);
+
+        // Validate we got a proper JSON response (not an HTML error page)
+        const contentType = res.headers?.['content-type'] || '';
+        if (contentType.includes('text/html')) {
+            console.error('[Trainerize] ❌ Got HTML response instead of JSON - API endpoint may be wrong');
+            console.error('[Trainerize] Response:', typeof res.data === 'string' ? res.data.substring(0, 200) : res.data);
+            throw new Error('Trainerize API returned HTML instead of JSON');
+        }
+
+        console.log('[Trainerize] ✅ Client created:', JSON.stringify(res.data));
         return res.data;
     } catch (error) {
-        console.error('Error creating client:', error.response?.data || error.message);
-        // If user already exists, we might want to return the existing user or handle gracefully
+        console.error('[Trainerize] ❌ Error creating client:', error.response?.status, error.response?.data || error.message);
+        // If user already exists (409), try to find them
         if (error.response?.status === 409) {
-            console.log('User likely already exists, checking for existing user...');
-            // Logic to find user could go here, for now re-throw or return null
+            console.log('[Trainerize] User already exists, attempting to find...');
+            try {
+                const findRes = await api.post('/user/find', { email: user.email });
+                if (findRes.data?.userID) {
+                    console.log(`[Trainerize] ✅ Found existing user: ${findRes.data.userID}`);
+                    return findRes.data;
+                }
+            } catch (findErr) {
+                console.error('[Trainerize] ❌ Failed to find existing user:', findErr.message);
+            }
         }
         throw error;
     }
 }
 
 async function activateProgram(clientId, programId) {
-    console.log(`Activating program ID ${programId} for client ${clientId}`);
+    console.log(`[Trainerize] Activating program ${programId} for client ${clientId}`);
 
     if (!programId || programId === '00000') {
-        console.warn(`Invalid Program ID provided: ${programId}`);
+        console.warn(`[Trainerize] Invalid Program ID provided: ${programId}`);
         return false;
     }
 
@@ -75,21 +93,21 @@ async function activateProgram(clientId, programId) {
             forceMerge: true
         };
 
-        // Using copyToUser as identified in documentation
+        console.log(`[Trainerize] POST /program/copyToUser payload:`, JSON.stringify(payload));
         const res = await api.post('/program/copyToUser', payload);
-        console.log(`Program assigned successfully:`, res.data);
+        console.log(`[Trainerize] ✅ Program assigned:`, JSON.stringify(res.data));
         return true;
     } catch (error) {
-        console.error(`Error assigning program:`, error.response?.data || error.message);
+        console.error(`[Trainerize] ❌ Error assigning program:`, error.response?.status, error.response?.data || error.message);
         throw error;
     }
 }
 
 async function deactivateClient(userId) {
-    console.log(`Deactivating client ${userId}...`);
+    console.log(`[Trainerize] Deactivating client ${userId}...`);
 
     if (!userId) {
-        console.warn("Cannot deactivate: No User ID provided");
+        console.warn('[Trainerize] Cannot deactivate: No User ID provided');
         return false;
     }
 
@@ -99,15 +117,12 @@ async function deactivateClient(userId) {
             status: 'deactivated'
         };
 
-        // Using the same /users endpoint with PUT/POST to update status
-        // Documentation implies updating user properties directly
-        const res = await api.put('/users', payload);
-        console.log(`Client ${userId} deactivated successfully:`, res.data);
+        // Using /user/setStatus to change the user's status
+        const res = await api.post('/user/setStatus', payload);
+        console.log(`[Trainerize] ✅ Client ${userId} deactivated:`, res.data);
         return true;
     } catch (error) {
-        console.error(`Error deactivating client:`, error.response?.data || error.message);
-        // Fallback: If PUT not supported, try known pattern or just log error
-        // Some APIs require specific deactivation endpoint, but standard is invalidating status
+        console.error(`[Trainerize] ❌ Error deactivating client:`, error.response?.status, error.response?.data || error.message);
         throw error;
     }
 }

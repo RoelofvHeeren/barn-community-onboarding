@@ -189,7 +189,7 @@ const ProgramPodium = ({ recommendations, user }) => {
                 body: JSON.stringify(leadData)
             });
         } catch (e) { console.warn("Intent save failed", e); }
-        window.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
+        window.top.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
     };
 
     return (

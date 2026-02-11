@@ -226,12 +226,12 @@ function App() {
           tags: ['manual_selection', manualProgram.slug]
         });
 
-        // Redirect to checkout
-        window.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
+        // Redirect to checkout (break out of iframe if embedded)
+        window.top.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
       } catch (err) {
         console.error("Lead capture failed", err);
         // Fallback redirect
-        window.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
+        window.top.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
       }
     } else {
       // Quiz flow
