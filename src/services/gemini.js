@@ -198,6 +198,9 @@ const calculateDeterministicScores = (answers) => {
             if (p.slug === 'functional-bodybuilding') { score += 5; }
             if (p.slug === 'bodyweight') { score += 5; }
         }
+        else if (gender === 'male') {
+            if (p.slug === 'sculpt-tone') { score = 0; reason = "Not recommended for men."; }
+        }
 
         // ═══════════════════════════════════════════
         // EXPERIENCE (+5-10 points)
@@ -332,6 +335,7 @@ export const analyzeProfile = async (answers) => {
     - If the user has knee issues, Running Program should score very low (under 10).
     - If the user has no equipment, programs requiring a gym should score very low.
     - Female users should get a boost for Sculpt & Tone.
+    - Male users should NEVER be recommended Sculpt & Tone. It is designed for women. Give it a score under 10 for men.
 
     Available programs:
     ${JSON.stringify(PROGRAMS.map(p => ({ name: p.name, slug: p.slug, description: p.description })), null, 2)}

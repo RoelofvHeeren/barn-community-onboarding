@@ -178,6 +178,15 @@ function App() {
 
     // Payment Success
     if (urlParams.get('success') === 'true') {
+      // If we're in an iframe, break out by redirecting the parent
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          type: 'PAYMENT_SUCCESS',
+          data: { redirectUrl: window.location.href }
+        }, '*');
+        // Also try to redirect parent directly
+        try { window.top.location.href = window.location.href; } catch (e) { /* cross-origin blocked, rely on postMessage */ }
+      }
       setStep('payment_success');
       return;
     }
