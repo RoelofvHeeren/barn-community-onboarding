@@ -178,6 +178,68 @@ app.post('/api/webhooks/stripe', bodyParser.raw({ type: 'application/json' }), a
 
 const PROGRAM_MAPPING = require('./config/programs');
 
+// --- Helper: Deactivate User from Stripe Reference ---
+async function deactivateUserFromStripeReference(stripeCustomerId, userEmail, context = 'Deactivation') {
+    let trainerizeId = null;
+    let ghlContactId = null;
+    let resolvedEmail = userEmail;
+
+    console.log(`[${context}] ⏳ Starting deactivation for Stripe Customer ${stripeCustomerId} / Email ${userEmail}`);
+
+    // 1. Resolve IDs from Stripe Metadata
+    if (stripeCustomerId) {
+        try {
+            const customer = await stripe.customers.retrieve(stripeCustomerId);
+            resolvedEmail = resolvedEmail || customer.email;
+            if (customer.metadata) {
+                trainerizeId = customer.metadata.trainerizeId;
+                ghlContactId = customer.metadata.ghlContactId;
+            }
+        } catch (e) {
+            console.error(`[${context}] Error fetching stripe customer:`, e.message);
+        }
+    }
+
+    // 2. Fallback: DB
+    if ((!trainerizeId || !ghlContactId) && resolvedEmail) {
+        const key = resolvedEmail.toLowerCase().trim();
+        try {
+            const result = await db.query('SELECT trainerize_id, ghl_contact_id FROM leads WHERE email = $1', [key]);
+            if (result.rows.length > 0) {
+                const lead = result.rows[0];
+                trainerizeId = trainerizeId || lead.trainerize_id;
+                ghlContactId = ghlContactId || lead.ghl_contact_id;
+            }
+        } catch (e) {
+            console.error(`[${context}] DB Error:`, e);
+        }
+    }
+
+    // 3. Deactivate Trainerize
+    if (trainerizeId) {
+        try {
+            await deactivateClient(trainerizeId);
+            console.log(`[${context}] ✅ Deactivated Trainerize User ${trainerizeId}`);
+        } catch (e) {
+            console.error(`[${context}] ❌ Failed to deactivate user ${trainerizeId}:`, e.message);
+        }
+    } else {
+        console.warn(`[${context}] ⚠️  No Trainerize ID found for ${resolvedEmail}, cannot deactivate.`);
+    }
+
+    // 4. Update GHL to "Lost"
+    if (ghlContactId) {
+        try {
+            await updatePipelineStage(ghlContactId, 'Lost', 'lost');
+            // Remove trial tag if it exists
+            await manageTags(ghlContactId, [], ['Trial Community']);
+            console.log(`[${context}] ✅ Marked GHL Opportunity as Lost for ${ghlContactId}`);
+        } catch (e) {
+            console.error(`[${context}] ❌ Failed to update GHL:`, e.message);
+        }
+    }
+}
+
 async function handleNewSubscription(session) {
     const { customer_email, customer_details } = session;
     const userEmail = customer_email || customer_details?.email;
@@ -467,67 +529,25 @@ async function handleSubscriptionUpdated(subscription, previousAttributes) {
     }
 }
 
+// Check for Trial -> Failed/Unpaid/Cancelled (Trial Expired without payment)
+if (previousAttributes?.status === 'trialing' && ['past_due', 'unpaid', 'canceled', 'incomplete_expired'].includes(subscription.status)) {
+    console.log(`[Sub Update] ⚠️ Trial expired without conversion for ${subscription.customer} (Status: ${subscription.status})`);
+    await deactivateUserFromStripeReference(subscription.customer, null, 'Trial Expiration');
+}
+}
+
 async function handlePaymentFailure(invoice) {
     const email = invoice.customer_email;
-    if (email) console.log(`Should deactivate user ${email} due to payment failure`);
+    const customerId = invoice.customer;
+    console.log(`[Payment Failed] ⚠️ Handling failure for ${email || customerId}`);
+
+    // Deactivate user immediately on payment failure
+    await deactivateUserFromStripeReference(customerId, email, 'Payment Failure');
 }
 
 async function handleSubscriptionCancelled(subscription) {
-    const stripeCustomerId = subscription.customer;
-    let trainerizeId = null;
-    let ghlContactId = null;
-    let userEmail = null;
-
-    // 1. Resolve IDs from Stripe Metadata
-    if (stripeCustomerId) {
-        try {
-            const customer = await stripe.customers.retrieve(stripeCustomerId);
-            userEmail = customer.email;
-            if (customer.metadata) {
-                trainerizeId = customer.metadata.trainerizeId;
-                ghlContactId = customer.metadata.ghlContactId;
-            }
-        } catch (e) {
-            console.error("Error fetching stripe customer for cancellation:", e.message);
-        }
-    }
-
-    // 2. Fallback: DB
-    if ((!trainerizeId || !ghlContactId) && userEmail) {
-        const key = userEmail.toLowerCase().trim();
-        try {
-            const result = await db.query('SELECT trainerize_id, ghl_contact_id FROM leads WHERE email = $1', [key]);
-            if (result.rows.length > 0) {
-                const lead = result.rows[0];
-                trainerizeId = trainerizeId || lead.trainerize_id;
-                ghlContactId = ghlContactId || lead.ghl_contact_id;
-            }
-        } catch (e) {
-            console.error("[Cancel Sub] DB Error:", e);
-        }
-    }
-
-    // 3. Deactivate Trainerize
-    if (trainerizeId) {
-        try {
-            await deactivateClient(trainerizeId);
-            console.log(`Deactivated Trainerize User ${trainerizeId}`);
-        } catch (e) {
-            console.error(`Failed to deactivate user ${trainerizeId}:`, e.message);
-        }
-    }
-
-    // 4. Update GHL to "Lost"
-    if (ghlContactId) {
-        try {
-            await updatePipelineStage(ghlContactId, 'Lost', 'lost');
-            // Optionally remove trial tag if they cancelled during trial
-            await manageTags(ghlContactId, [], ['Trial Community']);
-            console.log(`Marked GHL Opportunity as Lost for ${ghlContactId}`);
-        } catch (e) {
-            console.error(`Failed to update GHL for cancellation:`, e.message);
-        }
-    }
+    console.log(`[Sub Cancelled] ⚠️ Processing cancellation for ${subscription.customer}`);
+    await deactivateUserFromStripeReference(subscription.customer, null, 'Subscription Cancelled');
 }
 
 
