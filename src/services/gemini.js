@@ -20,7 +20,7 @@ export const PROGRAMS = [
     },
     {
         name: "Hybrid Athlete",
-        description: "Get strong, fit, and athletic at the same time. Hybrid Athlete combines structured strength training with conditioning so you don’t have to choose between lifting and fitness.\n\nWhat it focuses on:\n- Strength and conditioning combined\n- Athletic performance and endurance\n- Balanced, all-round training",
+        description: "Get strong, fit, and athletic at the same time. Hybrid Athlete combines structured strength training with conditioning so you don't have to choose between lifting and fitness.\n\nWhat it focuses on:\n- Strength and conditioning combined\n- Athletic performance and endurance\n- Balanced, all-round training",
         slug: "hybrid-athlete",
         tagline: "Train like an athlete, not just a gym-goer.",
         specs: {
@@ -33,6 +33,40 @@ export const PROGRAMS = [
             "Power, speed, and agility focus",
             "Improves performance and fitness",
             "Includes performance and fitness"
+        ]
+    },
+    {
+        name: "Sculpted and Toned",
+        description: "Build a lean, confident physique without extremes. This program focuses on smart strength training to improve muscle definition, tone, and overall shape.\n\nWhat it focuses on:\n- Lean muscle and definition\n- Full body toning\n- Sustainable, balanced training",
+        slug: "sculpt-tone",
+        tagline: "Build a lean, confident physique without extremes.",
+        specs: {
+            frequency: "4 days/week",
+            duration: "45-60 mins",
+            intensity: "Moderate",
+            focus: "Definition & Tone"
+        },
+        bullets: [
+            "Lean muscle and definition",
+            "Full body toning and shape",
+            "Sustainable and balanced training"
+        ]
+    },
+    {
+        name: "Female Functional Strength",
+        description: "A strength and conditioning program built specifically for women. Combines compound lifts, functional movement, and targeted accessory work to build real strength, improve body composition, and boost confidence in the gym.\n\nWhat it focuses on:\n- Full body strength with a female-focused approach\n- Functional movements for daily life\n- Balanced programming for longevity and results",
+        slug: "female-functional",
+        tagline: "Strength training designed for women, by coaches who understand.",
+        specs: {
+            frequency: "3-4 days/week",
+            duration: "45-60 mins",
+            intensity: "Moderate-High",
+            focus: "Strength & Conditioning"
+        },
+        bullets: [
+            "Built specifically for women",
+            "Compound lifts and functional movement",
+            "Confidence and strength combined"
         ]
     },
     {
@@ -118,40 +152,6 @@ export const PROGRAMS = [
             "Power, speed, and agility focus",
             "High-level strength training",
             "Athletic performance development"
-        ]
-    },
-    {
-        name: "Sculpted and Toned",
-        description: "Build a lean, confident physique without extremes. This program focuses on smart strength training to improve muscle definition, tone, and overall shape.\n\nWhat it focuses on:\n- Lean muscle and definition\n- Full body toning\n- Sustainable, balanced training",
-        slug: "sculpt-tone",
-        tagline: "Build a lean, confident physique without extremes.",
-        specs: {
-            frequency: "4 days/week",
-            duration: "45-60 mins",
-            intensity: "Moderate",
-            focus: "Definition & Tone"
-        },
-        bullets: [
-            "Power, speed, and agility focus",
-            "Strength and conditioning combined",
-            "Sustainable and balanced training"
-        ]
-    },
-    {
-        name: "Female Functional Strength",
-        description: "A strength and conditioning program built specifically for women. Combines compound lifts, functional movement, and targeted accessory work to build real strength, improve body composition, and boost confidence in the gym.\n\nWhat it focuses on:\n- Full body strength with a female-focused approach\n- Functional movements for daily life\n- Balanced programming for longevity and results",
-        slug: "female-functional",
-        tagline: "Strength training designed for women, by coaches who understand.",
-        specs: {
-            frequency: "3-4 days/week",
-            duration: "45-60 mins",
-            intensity: "Moderate-High",
-            focus: "Strength & Conditioning"
-        },
-        bullets: [
-            "Built specifically for women",
-            "Compound lifts and functional movement",
-            "Confidence and strength combined"
         ]
     },
 
