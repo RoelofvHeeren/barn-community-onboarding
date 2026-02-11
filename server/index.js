@@ -17,6 +17,12 @@ if (!process.env.STRIPE_SECRET_KEY) {
 if (!process.env.STRIPE_WEBHOOK_SECRET) {
     console.error("❌ CRITICAL: STRIPE_WEBHOOK_SECRET is missing from environment variables.");
 }
+if (!process.env.VITE_TRAINERIZE_GROUP_ID && !process.env.TRAINERIZE_GROUP_ID) {
+    console.error("❌ CRITICAL: TRAINERIZE_GROUP_ID is missing from environment variables. Trainerize integration will FAIL.");
+}
+if (!process.env.VITE_TRAINERIZE_API_TOKEN && !process.env.TRAINERIZE_API_TOKEN) {
+    console.error("❌ CRITICAL: TRAINERIZE_API_TOKEN is missing from environment variables. Trainerize integration will FAIL.");
+}
 
 // Use JSON parser for all non-webhook routes
 app.use((req, res, next) => {
@@ -119,13 +125,27 @@ app.post('/api/webhooks/stripe', bodyParser.raw({ type: 'application/json' }), a
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
+    // Log every incoming event for debugging
+    const eventObj = event.data.object;
+    console.log(`\n[Webhook] ━━━ Incoming Event: ${event.type} ━━━`);
+    console.log(`[Webhook] Event ID: ${event.id}`);
+    console.log(`[Webhook] Object ID: ${eventObj.id}`);
+    console.log(`[Webhook] Customer: ${eventObj.customer || eventObj.customer_email || 'N/A'}`);
+    console.log(`[Webhook] Metadata:`, JSON.stringify(eventObj.metadata || {}, null, 2));
+
     // Handle Events
     try {
         switch (event.type) {
             case 'checkout.session.completed':
                 const session = event.data.object;
-                console.log('Checkout Completed:', session.customer_email);
+                console.log('[Webhook] ✅ Checkout Completed:', session.customer_email);
                 await handleNewSubscription(session);
+                break;
+
+            case 'customer.subscription.created':
+                const newSub = event.data.object;
+                console.log('[Webhook] ✅ Subscription Created:', newSub.id);
+                await handleSubscriptionCreated(newSub);
                 break;
 
             case 'customer.subscription.updated':
@@ -135,7 +155,7 @@ app.post('/api/webhooks/stripe', bodyParser.raw({ type: 'application/json' }), a
 
             case 'invoice.payment_failed':
                 const invoice = event.data.object;
-                console.log('Payment Failed:', invoice.customer_email);
+                console.log('[Webhook] ⚠️ Payment Failed:', invoice.customer_email);
                 await handlePaymentFailure(invoice);
                 break;
 
@@ -145,7 +165,7 @@ app.post('/api/webhooks/stripe', bodyParser.raw({ type: 'application/json' }), a
                 break;
 
             default:
-                console.log(`Unhandled event type ${event.type}`);
+                console.log(`[Webhook] ℹ️ Unhandled event type: ${event.type}`);
         }
         res.json({ received: true });
     } catch (error) {
@@ -298,6 +318,92 @@ async function handleNewSubscription(session) {
     console.log(`[Stripe Handler] 🏁 END: finished processing for ${userEmail}`);
 }
 
+// --- NEW: Handle customer.subscription.created (fallback for checkout.session.completed) ---
+async function handleSubscriptionCreated(subscription) {
+    const customerId = subscription.customer;
+    const programSlug = subscription.metadata?.programSlug;
+
+    console.log(`[Sub Created] 🚀 START: Processing new subscription ${subscription.id}`);
+    console.log(`[Sub Created] Customer ID: ${customerId}, Status: ${subscription.status}`);
+    console.log(`[Sub Created] Program from metadata: ${programSlug || 'NONE'}`);
+
+    if (!customerId) {
+        console.error('[Sub Created] ❌ No customer ID on subscription, cannot proceed.');
+        return;
+    }
+
+    // 1. Resolve customer email from Stripe
+    let userEmail, customerName;
+    try {
+        const customer = await stripe.customers.retrieve(customerId);
+        userEmail = customer.email;
+        customerName = customer.name || '';
+        console.log(`[Sub Created] Resolved customer: ${userEmail} (${customerName})`);
+    } catch (e) {
+        console.error('[Sub Created] ❌ Failed to retrieve Stripe customer:', e.message);
+        return;
+    }
+
+    if (!userEmail) {
+        console.error('[Sub Created] ❌ No email found on Stripe customer, cannot proceed.');
+        return;
+    }
+
+    // 2. Check if this user was already processed (avoid double-processing with checkout.session.completed)
+    const key = userEmail.toLowerCase().trim();
+    let leadData = {};
+    let alreadyProcessed = false;
+
+    try {
+        const result = await db.query('SELECT * FROM leads WHERE email = $1', [key]);
+        if (result.rows.length > 0) {
+            leadData = result.rows[0];
+            // If already has a trainerize_id, skip to avoid duplicate invites
+            if (leadData.trainerize_id) {
+                console.log(`[Sub Created] ⏭️ User already has Trainerize ID (${leadData.trainerize_id}), skipping.`);
+                alreadyProcessed = true;
+            }
+        }
+    } catch (err) {
+        console.error('[Sub Created] DB lookup error:', err.message);
+    }
+
+    if (alreadyProcessed) {
+        console.log(`[Sub Created] 🏁 END: Already processed, skipping ${userEmail}`);
+        return;
+    }
+
+    // 3. Build a session-like object so we can reuse handleNewSubscription
+    const resolvedProgramSlug = programSlug || leadData.program_slug;
+    const nameParts = customerName.split(' ');
+    const firstName = leadData.first_name || nameParts[0] || 'Member';
+    const lastName = leadData.last_name || nameParts.slice(1).join(' ') || '';
+
+    console.log(`[Sub Created] Resolved: Email=${userEmail}, Program=${resolvedProgramSlug}, Name=${firstName} ${lastName}`);
+
+    if (!resolvedProgramSlug) {
+        console.error(`[Sub Created] ❌ No program slug found in subscription metadata or DB for ${userEmail}`);
+        return;
+    }
+
+    // 4. Build a pseudo-session object and delegate to existing handler
+    const pseudoSession = {
+        customer: customerId,
+        customer_email: userEmail,
+        customer_details: { email: userEmail, name: customerName },
+        metadata: {
+            programSlug: resolvedProgramSlug,
+            userEmail: userEmail,
+            firstName: firstName,
+            lastName: lastName
+        }
+    };
+
+    console.log(`[Sub Created] Delegating to handleNewSubscription...`);
+    await handleNewSubscription(pseudoSession);
+    console.log(`[Sub Created] 🏁 END: Finished processing ${userEmail}`);
+}
+
 async function handleSubscriptionUpdated(subscription, previousAttributes) {
     // Check for Trial -> Active Conversion
     if (subscription.status === 'active' && previousAttributes?.status === 'trialing') {
@@ -427,6 +533,7 @@ app.listen(PORT, () => {
 
 module.exports = {
     handleNewSubscription,
+    handleSubscriptionCreated,
     handlePaymentFailure,
     handleSubscriptionCancelled,
     handleSubscriptionUpdated
