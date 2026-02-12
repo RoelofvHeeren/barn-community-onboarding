@@ -92,7 +92,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
 // Save generic lead (intent capture)
 // Save generic lead (intent capture)
 app.post('/api/save-lead', async (req, res) => {
-    const { email, programSlug, firstName, lastName } = req.body;
+    const { email, programSlug, firstName, lastName, phone } = req.body;
 
     if (!email || !programSlug) {
         return res.status(400).json({ error: 'Missing email or programSlug' });
@@ -102,15 +102,16 @@ app.post('/api/save-lead', async (req, res) => {
 
     try {
         await db.query(
-            `INSERT INTO leads (email, program_slug, first_name, last_name, updated_at)
-             VALUES ($1, $2, $3, $4, NOW())
+            `INSERT INTO leads (email, program_slug, first_name, last_name, phone, updated_at)
+             VALUES ($1, $2, $3, $4, $5, NOW())
              ON CONFLICT (email)
              DO UPDATE SET 
                 program_slug = EXCLUDED.program_slug,
                 first_name = COALESCE(leads.first_name, EXCLUDED.first_name),
                 last_name = COALESCE(leads.last_name, EXCLUDED.last_name),
+                phone = COALESCE(leads.phone, EXCLUDED.phone),
                 updated_at = NOW()`,
-            [key, programSlug, firstName, lastName]
+            [key, programSlug, firstName, lastName, phone]
         );
         console.log(`Lead saved to DB: ${key} -> ${programSlug}`);
         res.json({ success: true });
@@ -318,7 +319,7 @@ async function handleNewSubscription(session) {
 
                 // Create Opportunity "On Trial"
                 console.log("[GHL Sync] Updating Stage: On Trial");
-                await updatePipelineStage(ghlContactId, 'On Trial', 'open');
+                await updatePipelineStage(ghlContactId, 'On Trial', 'open', `${firstName} ${lastName}`.trim());
 
                 console.log(`[GHL Sync] Setup Complete for ${userEmail}`);
             }
@@ -524,7 +525,10 @@ async function handleSubscriptionUpdated(subscription, previousAttributes) {
                 }
 
                 // 3. Update Opportunity
-                await updatePipelineStage(ghlContactId, targetStage, 'won');
+                // We need names - if we don't have them in scope easily (we don't here without another lookup or passing them)
+                // We can try to use customer.name from stripe if available
+                const fullName = customer.name || 'Barn Member';
+                await updatePipelineStage(ghlContactId, targetStage, 'won', fullName);
                 console.log(`Moved to stage: ${targetStage}`);
 
             } else {

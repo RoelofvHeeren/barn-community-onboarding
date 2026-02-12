@@ -181,6 +181,7 @@ const ProgramPodium = ({ recommendations, user }) => {
                 email: user?.email || '',
                 firstName: user?.firstName || '',
                 lastName: user?.lastName || '',
+                phone: user?.phone || '',
                 programSlug: program.slug
             };
             await fetch('/api/save-lead', {

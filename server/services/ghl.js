@@ -111,7 +111,7 @@ async function manageTags(contactId, tagsToAdd = [], tagsToRemove = []) {
  * Since we don't store Opp ID, we try to Find Open Opportunity in Pipeline first.
  * If found, update. If not, create.
  */
-async function updatePipelineStage(contactId, stageName, status = 'open') {
+async function updatePipelineStage(contactId, stageName, status = 'open', opportunityName = null) {
     const stageId = config.pipeline.stages[stageName];
     if (!stageId) {
         console.error(`❌ Invalid Stage Name: ${stageName}`);
@@ -142,7 +142,7 @@ async function updatePipelineStage(contactId, stageName, status = 'open') {
         pipelineId: config.pipeline.id,
         pipelineStageId: stageId,
         status: status,
-        name: "Barn Community Membership", // Default Title
+        name: opportunityName || "Barn Community Membership",
         contactId: contactId
         // locationId removed as it's not accepted by this endpoint version/auth method
     };
