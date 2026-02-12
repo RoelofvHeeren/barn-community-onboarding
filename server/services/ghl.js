@@ -12,6 +12,18 @@ const HEADERS = {
     'Content-Type': 'application/json'
 };
 
+const PROGRAM_TAG_MAP = {
+    'power-building': 'Program: Power Building',
+    'hybrid-athlete': 'Program: Hybrid Athlete',
+    'kettlebell-program': 'Program: Kettlebell',
+    'running-program': 'Program: Running',
+    'bodyweight': 'Program: Bodyweight',
+    'functional-bodybuilding': 'Program: Functional Bodybuilding',
+    'athlete-program': 'Program: Athlete',
+    'sculpt-tone': 'Program: Sculpt & Tone',
+    'female-functional': 'Program: Female Functional'
+};
+
 /**
  * Syncs a user to GHL (Create/Update) with Quiz Answers mapped to Custom Fields.
  * @param {Object} userData - { email, firstName, lastName, phone, answers, programSlug }
@@ -36,6 +48,11 @@ async function syncContact(userData) {
         customFields.push({ id: config.fields.program_slug, value: userData.programSlug });
     }
 
+    const initialTags = ['Trial Community'];
+    if (userData.programSlug && PROGRAM_TAG_MAP[userData.programSlug]) {
+        initialTags.push(PROGRAM_TAG_MAP[userData.programSlug]);
+    }
+
     const payload = {
         email: userData.email,
         firstName: userData.firstName,
@@ -43,7 +60,7 @@ async function syncContact(userData) {
         phone: userData.phone,
         locationId: config.locationId,
         customFields: customFields,
-        // tags: ['Barn Onboarding'] // Optional initial tag
+        tags: initialTags
     };
 
     try {
@@ -126,8 +143,8 @@ async function updatePipelineStage(contactId, stageName, status = 'open') {
         pipelineStageId: stageId,
         status: status,
         name: "Barn Community Membership", // Default Title
-        contactId: contactId,
-        locationId: config.locationId
+        contactId: contactId
+        // locationId removed as it's not accepted by this endpoint version/auth method
     };
 
     try {
