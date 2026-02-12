@@ -7,6 +7,13 @@ const { createClient, activateProgram, deactivateClient } = require('./services/
 const { syncContact, manageTags, updatePipelineStage } = require('./services/ghl');
 const db = require('./db');
 
+// ... (rest of imports)
+
+// ... inside handleNewSubscription ...
+
+
+// ... (rest of imports)
+
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -315,6 +322,7 @@ async function handleNewSubscription(session) {
 
                 console.log(`[GHL Sync] Setup Complete for ${userEmail}`);
             }
+
         } catch (e) {
             console.error("[GHL Sync] ❌ FAILED:", e.message);
         }

@@ -123,9 +123,9 @@ async function updatePipelineStage(contactId, stageName, status = 'open') {
 
     const payload = {
         pipelineId: config.pipeline.id,
-        stageId: stageId,
+        pipelineStageId: stageId,
         status: status,
-        title: "Barn Community Membership", // Default Title
+        name: "Barn Community Membership", // Default Title
         contactId: contactId,
         locationId: config.locationId
     };
