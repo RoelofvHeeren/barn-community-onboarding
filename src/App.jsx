@@ -6,6 +6,7 @@ import LeadCapture from './components/LeadCapture';
 import ProgramPodium from './components/ProgramPodium';
 import ProgramSelector from './components/ProgramSelector';
 import PaymentSuccess from './components/PaymentSuccess';
+import StatsDashboard from './components/StatsDashboard';
 import { questions } from './data/questions';
 import { analyzeProfile, PROGRAMS } from './services/gemini';
 import { createContact } from './services/ghl';
@@ -38,6 +39,29 @@ function App() {
   const [isEmbedded, setIsEmbedded] = useState(false);
   const [flowType, setFlowType] = useState('quiz'); // 'quiz' or 'manual'
   const [manualProgram, setManualProgram] = useState(null);
+  const [sessionId] = useState(() => crypto.randomUUID());
+
+  // Tracking Helper
+  const trackEvent = async (eventType, eventData = {}) => {
+    try {
+      await fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          eventType,
+          eventData,
+          url: window.location.href
+        })
+      });
+    } catch (e) {
+      console.error("Tracking failed", e);
+    }
+  };
+
+  useEffect(() => {
+    trackEvent('view_welcome');
+  }, []);
 
   // Mock data for preview
   const MOCK_RESULTS = {
@@ -223,28 +247,38 @@ function App() {
       setUser({ firstName: 'Guest', email: 'guest@example.com' });
       setStep('results');
     }
+
+    // Stats Dashboard Mode
+    if (urlParams.get('mode') === 'stats') {
+      setStep('stats');
+    }
   }, []);
 
   const startQuiz = () => {
+    trackEvent('click_quiz_flow');
     setFlowType('quiz');
     setStep('lead_capture');
   };
 
   const startManualSelection = () => {
+    trackEvent('click_manual_flow');
     setFlowType('manual');
     setStep('program_selection');
   };
 
   const handleProgramSelect = (program) => {
+    trackEvent('select_program_manual', { programSlug: program.slug });
     setManualProgram(program);
     setStep('lead_capture');
   };
 
   const handleLeadCapture = async (userData) => {
     setUser(userData);
+    trackEvent('complete_lead_capture', { flowType });
 
     if (flowType === 'manual' && manualProgram) {
       // Direct checkout flow
+      trackEvent('click_checkout', { programSlug: manualProgram.slug });
       try {
         // Save lead to DB + Meta CAPI
         await fetch('/api/save-lead', {
@@ -276,6 +310,12 @@ function App() {
 
   const handleNext = (option) => {
     const currentQuestion = questions[currentQuestionIndex];
+    trackEvent('view_question', {
+      step: currentQuestionIndex + 1,
+      questionId: currentQuestion.id,
+      answer: option.value
+    });
+
     const newAnswers = { ...answers, [currentQuestion.id]: option.value };
     setAnswers(newAnswers);
 
@@ -287,18 +327,24 @@ function App() {
   };
 
   const handleBack = () => {
+    trackEvent('click_back', { fromStep: step, currentQuestionIndex });
     if (step === 'program_selection') {
       setStep('welcome');
     } else if (step === 'lead_capture') {
       if (flowType === 'manual') {
+        // If they came from program selection, go back there
+        // BUT they might have come directly if we change logic, 
+        // strictly speaking for manual flow it is program_selection -> lead_capture
         setStep('program_selection');
       } else {
+        // For quiz flow, it's welcome -> lead_capture
         setStep('welcome');
       }
     } else if (step === 'questions') {
       if (currentQuestionIndex > 0) {
         setCurrentQuestionIndex(prev => prev - 1);
       } else {
+        // Before questions is lead_capture
         setStep('lead_capture');
       }
     }
@@ -313,6 +359,10 @@ function App() {
         createContact({ ...userData, answers: finalAnswers })
       ]);
       setRecommendations(result);
+      trackEvent('view_results', {
+        programSlug: result.scores[0].slug,
+        programName: result.scores[0].program
+      });
       setTimeout(() => setStep('results'), 1500);
     } catch (err) {
       console.error(err);
@@ -479,6 +529,10 @@ function App() {
 
       {step === 'payment_success' && (
         <PaymentSuccess />
+      )}
+
+      {step === 'stats' && (
+        <StatsDashboard />
       )}
 
       <style>{`

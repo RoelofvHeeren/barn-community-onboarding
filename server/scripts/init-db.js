@@ -26,6 +26,15 @@ CREATE TABLE IF NOT EXISTS leads (
     status VARCHAR(50) DEFAULT 'pending',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS events (
+    id SERIAL PRIMARY KEY,
+    session_id VARCHAR(100),
+    event_type VARCHAR(100),
+    event_data JSONB DEFAULT '{}',
+    url VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 `;
 
 async function initDB() {

@@ -90,6 +90,66 @@ app.post('/api/create-checkout-session', async (req, res) => {
     }
 });
 
+// 1.5 Tracking Endpoint
+app.post('/api/track', async (req, res) => {
+    const { sessionId, eventType, eventData, url } = req.body;
+    try {
+        await db.query(
+            `INSERT INTO events (session_id, event_type, event_data, url) VALUES ($1, $2, $3, $4)`,
+            [sessionId, eventType, eventData || {}, url]
+        );
+        res.status(200).send('OK');
+    } catch (err) {
+        console.error('Tracking Error:', err);
+        res.status(500).send('Error tracking event');
+    }
+});
+
+// 1.6 Stats Endpoint
+app.get('/api/stats', async (req, res) => {
+    try {
+        // 1. Funnel Stats
+        const funnelQuery = `
+            SELECT event_type, COUNT(*) as count 
+            FROM events 
+            WHERE event_type IN ('view_welcome', 'click_manual_flow', 'click_quiz_flow', 'complete_lead_capture', 'view_results', 'click_checkout')
+            GROUP BY event_type
+        `;
+
+        // 2. Program Recommendations
+        const recommendationsQuery = `
+            SELECT event_data->>'programSlug' as program, COUNT(*) as count
+            FROM events
+            WHERE event_type = 'view_results'
+            GROUP BY event_data->>'programSlug'
+        `;
+
+        // 3. Quiz Drop-off
+        const quizStepsQuery = `
+            SELECT event_data->>'step' as step, COUNT(*) as count
+            FROM events
+            WHERE event_type = 'view_question'
+            GROUP BY event_data->>'step'
+            ORDER BY step
+        `;
+
+        const [funnel, recommendations, quizSteps] = await Promise.all([
+            db.query(funnelQuery),
+            db.query(recommendationsQuery),
+            db.query(quizStepsQuery)
+        ]);
+
+        res.json({
+            funnel: funnel.rows,
+            recommendations: recommendations.rows,
+            quizSteps: quizSteps.rows
+        });
+    } catch (err) {
+        console.error('Stats Error:', err);
+        res.status(500).json({ error: 'Failed to fetch stats' });
+    }
+});
+
 // Save generic lead (intent capture)
 // Save generic lead (intent capture)
 app.post('/api/save-lead', async (req, res) => {
