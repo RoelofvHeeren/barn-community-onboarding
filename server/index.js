@@ -346,7 +346,7 @@ async function handleNewSubscription(session) {
                     content_name: resolvedProgramSlug,
                     currency: 'GBP',
                     value: 0.00
-                });
+                }, session.id); // Use Session ID as Event ID for Deduplication
 
                 console.log(`[GHL Sync] Setup Complete for ${userEmail}`);
             }
@@ -569,7 +569,7 @@ async function handleSubscriptionUpdated(subscription, previousAttributes) {
                     value: 23.99, // Hardcoded for now, or fetch from invoice
                     content_name: 'Barn Community Membership',
                     status: 'active'
-                });
+                }, subscription.id); // Use Subscription ID as Event ID for Deduplication
 
             } else {
                 console.warn("No GHL ID found for converted subscription.");
