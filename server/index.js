@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const Stripe = require('stripe');
 const { createClient, activateProgram, deactivateClient } = require('./services/trainerize');
 const { syncContact, manageTags, updatePipelineStage } = require('./services/ghl');
+const { sendEvent } = require('./services/meta');
 const db = require('./db');
 
 // ... (rest of imports)
@@ -113,6 +114,19 @@ app.post('/api/save-lead', async (req, res) => {
                 updated_at = NOW()`,
             [key, programSlug, firstName, lastName, phone]
         );
+        const currentLead = result.rows.length > 0 ? result.rows[0] : null; // Access the result from INSERT/UPDATE if needed, or use input
+
+        // 5. Meta CAPI: Lead
+        await sendEvent('Lead', {
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            phone: phone
+        }, {
+            content_name: programSlug,
+            status: 'potential'
+        });
+
         console.log(`Lead saved to DB: ${key} -> ${programSlug}`);
         res.json({ success: true });
     } catch (err) {
@@ -320,6 +334,19 @@ async function handleNewSubscription(session) {
                 // Create Opportunity "On Trial"
                 console.log("[GHL Sync] Updating Stage: On Trial");
                 await updatePipelineStage(ghlContactId, 'On Trial', 'open', `${firstName} ${lastName}`.trim());
+
+                // 3. Meta CAPI: StartTrial
+                await sendEvent('StartTrial', {
+                    email: userEmail,
+                    phone: phone,
+                    firstName: firstName,
+                    lastName: lastName
+                }, {
+                    status: 'trialing',
+                    content_name: resolvedProgramSlug,
+                    currency: 'GBP',
+                    value: 0.00
+                });
 
                 console.log(`[GHL Sync] Setup Complete for ${userEmail}`);
             }
@@ -530,6 +557,19 @@ async function handleSubscriptionUpdated(subscription, previousAttributes) {
                 const fullName = customer.name || 'Barn Member';
                 await updatePipelineStage(ghlContactId, targetStage, 'won', fullName);
                 console.log(`Moved to stage: ${targetStage}`);
+
+                // 4. Meta CAPI: Purchase (Trial Conversion)
+                await sendEvent('Purchase', {
+                    email: subscription.customer_email || customer.email,
+                    phone: customer.phone,
+                    firstName: fullName.split(' ')[0],
+                    lastName: fullName.split(' ').slice(1).join(' ')
+                }, {
+                    currency: 'GBP',
+                    value: 23.99, // Hardcoded for now, or fetch from invoice
+                    content_name: 'Barn Community Membership',
+                    status: 'active'
+                });
 
             } else {
                 console.warn("No GHL ID found for converted subscription.");
