@@ -306,6 +306,12 @@ async function handleNewSubscription(session) {
     }
 
     // 2. Execute Integrations
+    // FALLBACK: If programSlug is still missing (e.g. direct Circle signup), default to 'sculpt-tone' or 'barn-community'
+    if (!programSlug) {
+        programSlug = 'sculpt-tone'; // Default Program
+        console.warn(`[Stripe Handler] ⚠️ No program slug found. Defaulting to '${programSlug}' to ensure GHL/Meta sync.`);
+    }
+
     if (userEmail && programSlug) {
         console.log(`[Stripe Handler] ⚡ Executes Integrations for: ${userEmail}, Program: ${programSlug}`);
 
