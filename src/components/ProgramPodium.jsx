@@ -11,7 +11,13 @@ const SpecRow = ({ icon, label, value }) => (
         <span className="spec-value">{value}</span>
     </div>
 );
-
+// Helper to get cookies safely
+const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+};
 const PodiumCard = ({ program, rank, onClick, isMobile }) => {
     const isWinner = rank === 1;
 
@@ -182,7 +188,9 @@ const ProgramPodium = ({ recommendations, user }) => {
                 firstName: user?.firstName || '',
                 lastName: user?.lastName || '',
                 phone: user?.phone || '',
-                programSlug: program.slug
+                programSlug: program.slug,
+                fbc: getCookie('_fbc'),
+                fbp: getCookie('_fbp')
             };
             await fetch('/api/save-lead', {
                 method: 'POST',

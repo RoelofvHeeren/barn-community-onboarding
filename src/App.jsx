@@ -21,6 +21,14 @@ function closeEmbeddedModal() {
   notifyParent('CLOSE_MODAL');
 }
 
+// Helper to get cookies safely
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+};
+
 function App() {
   const [step, setStep] = useState('welcome');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -238,10 +246,19 @@ function App() {
     if (flowType === 'manual' && manualProgram) {
       // Direct checkout flow
       try {
-        await createContact({
-          ...userData,
-          programSlug: manualProgram.slug,
-          tags: ['manual_selection', manualProgram.slug]
+        // Save lead to DB + Meta CAPI
+        await fetch('/api/save-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            phone: userData.phone,
+            programSlug: manualProgram.slug,
+            fbc: getCookie('_fbc'),
+            fbp: getCookie('_fbp')
+          })
         });
 
         // Redirect to checkout (break out of iframe if embedded)

@@ -121,7 +121,9 @@ app.post('/api/save-lead', async (req, res) => {
             email: email,
             firstName: firstName,
             lastName: lastName,
-            phone: phone
+            phone: phone,
+            fbp: req.body.fbp,
+            fbc: req.body.fbc
         }, {
             content_name: programSlug,
             status: 'potential'
