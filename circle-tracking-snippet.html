@@ -1,0 +1,31 @@
+<!-- Copy/Paste this into Circle Paywall > Tracking > Conversion tracking code -->
+<script>
+    !function (f, b, e, v, n, t, s) {
+        if (f.fbq) return; n = f.fbq = function () {
+            n.callMethod ?
+            n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+        };
+        if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+        n.queue = []; t = b.createElement(e); t.async = !0;
+        t.src = v; s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+
+    // Initialize Pixel
+    fbq('init', '935413671754852');
+    fbq('track', 'PageView');
+
+    // Track StartTrial Conversion
+    // Circle replaces variables like {{member_email}} automatically
+    fbq('track', 'StartTrial', {
+        value: '0.00',
+        currency: 'GBP',
+        content_name: 'Barn Community Membership',
+        user_data: {
+            em: '{{member_email}}',
+            fn: '{{member_first_name}}',
+            ln: '{{member_last_name}}'
+        }
+    });
+</script>

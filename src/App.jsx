@@ -377,6 +377,8 @@ function App() {
       case 'results':
       case 'welcome':
         return '1200px';
+      case 'stats':
+        return '100%';
       default:
         return '600px';
     }

@@ -110,7 +110,7 @@ app.get('/api/stats', async (req, res) => {
     try {
         // 1. Funnel Stats
         const funnelQuery = `
-            SELECT event_type, COUNT(*) as count 
+            SELECT event_type, COUNT(DISTINCT session_id) as count 
             FROM events 
             WHERE event_type IN ('view_welcome', 'click_manual_flow', 'click_quiz_flow', 'complete_lead_capture', 'view_results', 'click_checkout')
             GROUP BY event_type
@@ -118,7 +118,7 @@ app.get('/api/stats', async (req, res) => {
 
         // 2. Program Recommendations
         const recommendationsQuery = `
-            SELECT event_data->>'programSlug' as program, COUNT(*) as count
+            SELECT event_data->>'programSlug' as program, COUNT(DISTINCT session_id) as count
             FROM events
             WHERE event_type = 'view_results'
             GROUP BY event_data->>'programSlug'
@@ -126,11 +126,11 @@ app.get('/api/stats', async (req, res) => {
 
         // 3. Quiz Drop-off
         const quizStepsQuery = `
-            SELECT event_data->>'step' as step, COUNT(*) as count
+            SELECT event_data->>'step' as step, COUNT(DISTINCT session_id) as count
             FROM events
             WHERE event_type = 'view_question'
             GROUP BY event_data->>'step'
-            ORDER BY step
+            ORDER BY CAST(event_data->>'step' AS INTEGER) ASC
         `;
 
         const [funnel, recommendations, quizSteps] = await Promise.all([
