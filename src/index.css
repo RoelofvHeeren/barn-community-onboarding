@@ -34,7 +34,14 @@
 body {
   font-family: var(--font-body);
   color: var(--color-text-primary);
-  background: #000;
+  /* Set a light background color to match the theme (dark text) */
+  background-color: #f4f4f5;
+  /* Load background image immediately via CSS */
+  background-image: url('./assets/background.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
