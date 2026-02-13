@@ -248,8 +248,8 @@ function App() {
       setStep('results');
     }
 
-    // Stats Dashboard Mode
-    if (urlParams.get('mode') === 'stats') {
+    // Stats Dashboard Mode (New /reporting route)
+    if (window.location.pathname === '/reporting' || urlParams.get('mode') === 'stats') {
       setStep('stats');
     }
   }, []);
