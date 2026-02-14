@@ -182,6 +182,22 @@ const ProgramPodium = ({ recommendations, user }) => {
     }, [selectedProgram]);
 
     const handleJoin = async (program) => {
+        // Track the checkout click
+        try {
+            await fetch('/api/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionId: user?.sessionId || 'unknown', // We need to pass sessionId from App.jsx or context
+                    eventType: 'click_checkout',
+                    eventData: { programSlug: program.slug },
+                    url: window.location.href
+                })
+            });
+        } catch (e) {
+            console.error("Tracking failed", e);
+        }
+
         try {
             const leadData = {
                 email: user?.email || '',
