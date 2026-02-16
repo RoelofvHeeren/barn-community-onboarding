@@ -107,38 +107,6 @@ app.post('/api/track', async (req, res) => {
 
 // 1.6 Stats Endpoint
 app.get('/api/stats', async (req, res) => {
-    const { syncContact, manageTags, updatePipelineStage } = require('../services/ghl');
-    const { sendEvent } = require('../services/meta');
-    // ... imports ...
-
-    // ... inside save-lead ...
-    // 6. GHL Sync: Lead (Immediate)
-    try {
-        console.log(`[Save Lead] Syncing ${email} to GHL...`);
-        const ghlId = await syncContact({
-            email,
-            firstName,
-            lastName,
-            phone,
-            programSlug
-        });
-
-        if (ghlId) {
-            // Update DB with GHL ID
-            await db.query('UPDATE leads SET ghl_contact_id = $1 WHERE email = $2', [ghlId, key]);
-
-            // Add "Lead" tag
-            await manageTags(ghlId, ['Lead Captured']);
-
-            // Add to Pipeline: Filled Out Funnel
-            await updatePipelineStage(ghlId, 'Filled Out Funnel', 'open', `Lead: ${programSlug}`);
-
-            console.log(`[Save Lead] ✅ Synced to GHL: ${ghlId}`);
-        }
-    } catch (ghlError) {
-        console.error("[Save Lead] ⚠️ GHL Sync successful but failed to tag/update:", ghlError.message);
-    }
-
     // ... inside api/stats ...
     try {
         // 1. Funnel Stats
@@ -236,6 +204,10 @@ app.post('/api/save-lead', async (req, res) => {
 
                 // Add "Lead" tag
                 await manageTags(ghlId, ['Lead Captured']);
+
+                // Add to Pipeline: Filled Out Funnel
+                await updatePipelineStage(ghlId, 'Filled Out Funnel', 'open', `Lead: ${programSlug}`);
+
                 console.log(`[Save Lead] ✅ Synced to GHL: ${ghlId}`);
             }
         } catch (ghlError) {
