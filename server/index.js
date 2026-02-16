@@ -107,6 +107,39 @@ app.post('/api/track', async (req, res) => {
 
 // 1.6 Stats Endpoint
 app.get('/api/stats', async (req, res) => {
+    const { syncContact, manageTags, updatePipelineStage } = require('../services/ghl');
+    const { sendEvent } = require('../services/meta');
+    // ... imports ...
+
+    // ... inside save-lead ...
+    // 6. GHL Sync: Lead (Immediate)
+    try {
+        console.log(`[Save Lead] Syncing ${email} to GHL...`);
+        const ghlId = await syncContact({
+            email,
+            firstName,
+            lastName,
+            phone,
+            programSlug
+        });
+
+        if (ghlId) {
+            // Update DB with GHL ID
+            await db.query('UPDATE leads SET ghl_contact_id = $1 WHERE email = $2', [ghlId, key]);
+
+            // Add "Lead" tag
+            await manageTags(ghlId, ['Lead Captured']);
+
+            // Add to Pipeline: Filled Out Funnel
+            await updatePipelineStage(ghlId, 'Filled Out Funnel', 'open', `Lead: ${programSlug}`);
+
+            console.log(`[Save Lead] ✅ Synced to GHL: ${ghlId}`);
+        }
+    } catch (ghlError) {
+        console.error("[Save Lead] ⚠️ GHL Sync successful but failed to tag/update:", ghlError.message);
+    }
+
+    // ... inside api/stats ...
     try {
         // 1. Funnel Stats
         const funnelQuery = `
@@ -116,34 +149,30 @@ app.get('/api/stats', async (req, res) => {
             GROUP BY event_type
         `;
 
+        // 1b. Active Trials (Real Data from Leads table)
+        const activeTrialsQuery = `
+            SELECT COUNT(*) as count FROM leads WHERE status IN ('active', 'trialing')
+        `;
+
         // 2. Program Recommendations
-        const recommendationsQuery = `
-            SELECT event_data->>'programSlug' as program, COUNT(DISTINCT session_id) as count
-            FROM events
-            WHERE event_type = 'view_results'
-            GROUP BY event_data->>'programSlug'
-        `;
+        // ... (existing queries) ...
 
-        // 3. Quiz Drop-off
-        const quizStepsQuery = `
-            SELECT event_data->>'step' as step, COUNT(DISTINCT session_id) as count
-            FROM events
-            WHERE event_type = 'view_question'
-            GROUP BY event_data->>'step'
-            ORDER BY CAST(event_data->>'step' AS INTEGER) ASC
-        `;
-
-        const [funnel, recommendations, quizSteps] = await Promise.all([
+        const [funnel, activeTrialsRes, recommendations, quizSteps] = await Promise.all([
             db.query(funnelQuery),
+            db.query(activeTrialsQuery),
             db.query(recommendationsQuery),
             db.query(quizStepsQuery)
         ]);
 
+        const activeTrials = parseInt(activeTrialsRes.rows[0].count, 10);
+
         res.json({
             funnel: funnel.rows,
+            activeTrials: activeTrials,
             recommendations: recommendations.rows,
             quizSteps: quizSteps.rows
         });
+
     } catch (err) {
         console.error('Stats Error:', err);
         res.status(500).json({ error: 'Failed to fetch stats' });

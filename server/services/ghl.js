@@ -143,8 +143,8 @@ async function updatePipelineStage(contactId, stageName, status = 'open', opport
         pipelineStageId: stageId,
         status: status,
         name: opportunityName || "Barn Community Membership",
-        contactId: contactId
-        // locationId removed as it's not accepted by this endpoint version/auth method
+        contactId: contactId,
+        locationId: config.locationId
     };
 
     try {

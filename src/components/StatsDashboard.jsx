@@ -80,9 +80,9 @@ const StatsDashboard = () => {
                 />
                 <MetricCard
                     label="Started Trial"
-                    value={checkouts}
+                    value={stats.activeTrials !== undefined ? stats.activeTrials : checkouts}
                     icon="🚀"
-                    trend={`${checkoutConversionRate}% Conv.`}
+                    trend={`${checkoutConversionRate}% Click Rate`}
                     trendColor={checkoutConversionRate > 5 ? 'green' : 'orange'}
                 />
                 <MetricCard
