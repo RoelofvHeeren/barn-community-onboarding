@@ -162,7 +162,7 @@ app.post('/api/save-lead', async (req, res) => {
     const key = email.toLowerCase().trim();
 
     try {
-        await db.query(
+        const result = await db.query(
             `INSERT INTO leads (email, program_slug, first_name, last_name, phone, updated_at)
              VALUES ($1, $2, $3, $4, $5, NOW())
              ON CONFLICT (email)
@@ -171,7 +171,8 @@ app.post('/api/save-lead', async (req, res) => {
                 first_name = COALESCE(leads.first_name, EXCLUDED.first_name),
                 last_name = COALESCE(leads.last_name, EXCLUDED.last_name),
                 phone = COALESCE(leads.phone, EXCLUDED.phone),
-                updated_at = NOW()`,
+                updated_at = NOW()
+             RETURNING *`,
             [key, programSlug, firstName, lastName, phone]
         );
         const currentLead = result.rows.length > 0 ? result.rows[0] : null; // Access the result from INSERT/UPDATE if needed, or use input
