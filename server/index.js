@@ -108,8 +108,14 @@ app.post('/api/track', async (req, res) => {
 // 1.6 Stats Endpoint
 app.get('/api/stats', async (req, res) => {
     // ... inside api/stats ...
+    // Simple In-Memory Cache (10 mins)
+    const CACHE_TTL = 10 * 60 * 1000;
+    if (global.statsCache && (Date.now() - global.statsCache.timestamp < CACHE_TTL)) {
+        return res.json(global.statsCache.data);
+    }
+
     try {
-        // 1. Funnel Stats
+        // 1. Funnel Stats (Optimized with Cache)
         const funnelQuery = `
             SELECT event_type, COUNT(DISTINCT session_id) as count 
             FROM events 
@@ -134,12 +140,20 @@ app.get('/api/stats', async (req, res) => {
 
         const activeTrials = parseInt(activeTrialsRes.rows[0].count, 10);
 
-        res.json({
+        const responseData = {
             funnel: funnel.rows,
             activeTrials: activeTrials,
             recommendations: recommendations.rows,
             quizSteps: quizSteps.rows
-        });
+        };
+
+        // Update Cache
+        global.statsCache = {
+            timestamp: Date.now(),
+            data: responseData
+        };
+
+        res.json(responseData);
 
     } catch (err) {
         console.error('Stats Error:', err);
