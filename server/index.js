@@ -129,7 +129,21 @@ app.get('/api/stats', async (req, res) => {
         `;
 
         // 2. Program Recommendations
-        // ... (existing queries) ...
+        const recommendationsQuery = `
+            SELECT event_data->>'programSlug' as program, COUNT(DISTINCT session_id) as count
+            FROM events
+            WHERE event_type = 'view_results'
+            GROUP BY event_data->>'programSlug'
+        `;
+
+        // 3. Quiz Drop-off
+        const quizStepsQuery = `
+            SELECT event_data->>'step' as step, COUNT(DISTINCT session_id) as count
+            FROM events
+            WHERE event_type = 'view_question'
+            GROUP BY event_data->>'step'
+            ORDER BY CAST(event_data->>'step' AS INTEGER) ASC
+        `;
 
         const [funnel, activeTrialsRes, recommendations, quizSteps] = await Promise.all([
             db.query(funnelQuery),
