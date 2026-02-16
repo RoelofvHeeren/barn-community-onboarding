@@ -190,6 +190,29 @@ app.post('/api/save-lead', async (req, res) => {
             status: 'potential'
         });
 
+        // 6. GHL Sync: Lead (Immediate)
+        try {
+            console.log(`[Save Lead] Syncing ${email} to GHL...`);
+            const ghlId = await syncContact({
+                email,
+                firstName,
+                lastName,
+                phone,
+                programSlug
+            });
+
+            if (ghlId) {
+                // Update DB with GHL ID
+                await db.query('UPDATE leads SET ghl_contact_id = $1 WHERE email = $2', [ghlId, key]);
+
+                // Add "Lead" tag
+                await manageTags(ghlId, ['Lead Captured']);
+                console.log(`[Save Lead] ✅ Synced to GHL: ${ghlId}`);
+            }
+        } catch (ghlError) {
+            console.error("[Save Lead] ⚠️ GHL Sync successful but failed to tag/update:", ghlError.message);
+        }
+
         console.log(`Lead saved to DB: ${key} -> ${programSlug}`);
         res.json({ success: true });
     } catch (err) {
