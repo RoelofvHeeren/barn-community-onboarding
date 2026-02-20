@@ -84,6 +84,28 @@ app.post('/api/webhooks/circle', async (req, res) => {
                     [email, circleUserId, startDate, endDate]
                 );
                 console.log(`[Circle Webhook] ✅ Trials: Started 7-day Silver trial for ${email}`);
+
+                // --- NEW: FIRE META CAPI EVENT ---
+                const nameParts = (member.name || '').split(' ');
+                const firstName = nameParts[0] || '';
+                const lastName = nameParts.slice(1).join(' ') || '';
+
+                try {
+                    await sendEvent('StartTrial', {
+                        email: email,
+                        firstName: firstName,
+                        lastName: lastName
+                    }, {
+                        status: 'trialing',
+                        content_name: 'Barn Community Membership - Direct Join',
+                        value: 0.00,
+                        currency: 'GBP'
+                    }, `circle_join_${circleUserId}`);
+                    console.log(`[Circle Webhook] ✅ Meta CAPI: StartTrial event fired for ${email}`);
+                } catch (metaErr) {
+                    console.error("[Circle Webhook] ❌ Meta CAPI Error:", metaErr.message);
+                }
+
             } catch (dbError) {
                 console.error("[Circle Webhook] ❌ DB Error saving trial:", dbError.message);
             }
