@@ -1,6 +1,7 @@
 require('dotenv').config();
 const db = require('../db');
 const { circleService, SPACE_GROUPS } = require('../services/circle');
+const { sendEvent } = require('../services/meta');
 
 // Force exit after 30 seconds to prevent hanging
 setTimeout(() => {
@@ -60,6 +61,28 @@ async function checkTrials() {
                     [email, circleUserId, startDate, endDate]
                 );
                 console.log(`     > ✅ Started 7-Day Silver Trial for ${email}`);
+
+                // --- NEW: FIRE META CAPI EVENT ---
+                const nameParts = (name || '').split(' ');
+                const firstName = nameParts[0] || '';
+                const lastName = nameParts.slice(1).join(' ') || '';
+
+                try {
+                    console.log(`     > Firing Meta CAPI StartTrial event...`);
+                    await sendEvent('StartTrial', {
+                        email: email,
+                        firstName: firstName,
+                        lastName: lastName
+                    }, {
+                        status: 'trialing',
+                        content_name: 'Barn Community Membership - Direct Join',
+                        value: 0.00,
+                        currency: 'GBP'
+                    }, `circle_join_${circleUserId}`);
+                    console.log(`     > ✅ Meta CAPI Event Fired.`);
+                } catch (metaErr) {
+                    console.error("     > ❌ Meta CAPI Error:", metaErr.message);
+                }
             } else {
                 console.log(`     > Member already tracked. Skipping.`);
             }
