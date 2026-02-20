@@ -18,7 +18,7 @@ async function checkTrials() {
         // STEP 1: POLL FOR NEW MEMBERS (Onboarding)
         // ==========================================
         console.log('1. Polling for new members...');
-        const recentMembers = await circleService.listMembers(50); // Get last 50 members
+        const recentMembers = await circleService.listMembers(10); // Get last 10 members
         console.log(`   > Fetched ${recentMembers.length} members from Circle.`);
 
         for (const member of recentMembers) {
