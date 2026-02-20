@@ -18,6 +18,7 @@ const db = require('./db');
 const app = express();
 console.log('--- SERVER RESTARTED WITH NODEMAILER ---', new Date().toISOString());
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const PORT = process.env.PORT || 3000;
 
 // Check for critical env vars
 if (!process.env.STRIPE_SECRET_KEY) {
