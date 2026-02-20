@@ -117,6 +117,9 @@ async function checkTrials() {
             } else {
                 console.log(`     > User is NOT paid. Downgrading...`);
 
+                // Ensure they are in Bronze (Downgrade target)
+                await circleService.addMemberToSpaceGroup(email, SPACE_GROUPS.BRONZE);
+
                 // Remove from Silver Group
                 await circleService.removeMemberFromSpaceGroup(email, SPACE_GROUPS.SILVER);
 
