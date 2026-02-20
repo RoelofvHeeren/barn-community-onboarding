@@ -68,14 +68,19 @@ async function checkTrials() {
                 const lastName = nameParts.slice(1).join(' ') || '';
 
                 try {
-                    console.log(`     > Firing Meta CAPI StartTrial event...`);
+                    // Check if they came from the Lead Form (Flow A) or Direct (Flow B)
+                    const leadRes = await db.query('SELECT id FROM leads WHERE email = $1', [email]);
+                    const isFromLeadForm = leadRes.rows.length > 0;
+                    const flowName = isFromLeadForm ? 'Landing Page A (Lead Form)' : 'Landing Page B (Direct Join)';
+
+                    console.log(`     > Firing Meta CAPI StartTrial event for ${flowName}...`);
                     await sendEvent('StartTrial', {
                         email: email,
                         firstName: firstName,
                         lastName: lastName
                     }, {
                         status: 'trialing',
-                        content_name: 'Barn Community Membership - Direct Join',
+                        content_name: `Barn Community Membership - ${flowName}`,
                         value: 0.00,
                         currency: 'GBP'
                     }, `circle_join_${circleUserId}`);
