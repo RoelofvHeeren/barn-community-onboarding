@@ -258,7 +258,8 @@ function App() {
     }
 
     // Direct Program Flow
-    if (window.location.pathname === '/programs' || urlParams.get('flow') === 'direct') {
+    const path = window.location.pathname.replace(/\/$/, ""); // Remove trailing slash if present
+    if (path === '/programs' || urlParams.get('flow') === 'direct') {
       setFlowType('direct');
       setStep('program_selection');
       return;
