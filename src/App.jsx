@@ -7,6 +7,7 @@ import ProgramPodium from './components/ProgramPodium';
 import ProgramSelector from './components/ProgramSelector';
 import PaymentSuccess from './components/PaymentSuccess';
 import StatsDashboard from './components/StatsDashboard';
+import ProgramConfirmation from './components/ProgramConfirmation';
 import { questions } from './data/questions';
 import { analyzeProfile, PROGRAMS } from './services/gemini';
 import { createContact } from './services/ghl';
@@ -40,6 +41,8 @@ function App() {
   const [flowType, setFlowType] = useState('quiz'); // 'quiz' or 'manual'
   const [manualProgram, setManualProgram] = useState(null);
   const [sessionId] = useState(() => crypto.randomUUID());
+  const [verificationError, setVerificationError] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   // Tracking Helper
   const trackEvent = async (eventType, eventData = {}) => {
@@ -251,6 +254,14 @@ function App() {
     // Stats Dashboard Mode (New /reporting route)
     if (window.location.pathname === '/reporting' || urlParams.get('mode') === 'stats') {
       setStep('stats');
+      return;
+    }
+
+    // Direct Program Flow
+    if (window.location.pathname === '/programs' || urlParams.get('flow') === 'direct') {
+      setFlowType('direct');
+      setStep('program_selection');
+      return;
     }
   }, []);
 
@@ -273,38 +284,89 @@ function App() {
   };
 
   const handleLeadCapture = async (userData) => {
-    setUser(userData);
-    trackEvent('complete_lead_capture', { flowType });
+    setIsVerifying(true);
+    setVerificationError(null);
+    trackEvent('attempt_lead_capture', { flowType, email: userData.email });
 
-    if (flowType === 'manual' && manualProgram) {
-      // Direct checkout flow
-      trackEvent('click_checkout', { programSlug: manualProgram.slug });
-      try {
-        // Save lead to DB + Meta CAPI
-        await fetch('/api/save-lead', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: userData.email,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            phone: userData.phone,
-            programSlug: manualProgram.slug,
-            fbc: getCookie('_fbc'),
-            fbp: getCookie('_fbp')
-          })
-        });
+    if (flowType === 'direct') {
+      setUser(userData);
+      setIsVerifying(false);
+      setStep('direct_confirmation');
+      trackEvent('complete_lead_capture', { flowType, status: 'unverified' });
+      return;
+    }
 
-        // Redirect to checkout (break out of iframe if embedded)
-        window.top.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
-      } catch (err) {
-        console.error("Lead capture failed", err);
-        // Fallback redirect
-        window.top.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
+    try {
+      // 1. Verify Membership via Backend (Stripe)
+      const verifyRes = await fetch('/api/verify-member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userData.email })
+      });
+
+      const verifyData = await verifyRes.json();
+
+      if (!verifyRes.ok) {
+        setVerificationError(verifyData.error || "Verification failed. Please check your email.");
+        setIsVerifying(false);
+        trackEvent('verification_failed', { email: userData.email, error: verifyData.error });
+        return;
       }
-    } else {
-      // Quiz flow
-      setStep('questions');
+
+      // 2. Successful Verification
+      setUser({
+        ...userData,
+        firstName: verifyData.customer?.firstName || userData.firstName,
+        lastName: verifyData.customer?.lastName || userData.lastName
+      });
+      setIsVerifying(false);
+      trackEvent('complete_lead_capture', { flowType, status: 'verified' });
+
+      if (flowType === 'manual' && manualProgram) {
+        // Direct transition for manual flow
+        setStep('results'); // Show them the program they picked
+        setRecommendations({
+          summary: "Great choice! This program is perfectly suited for your training goals.",
+          scores: [manualProgram] // Just show the one they picked
+        });
+      } else {
+        // Quiz flow
+        setStep('questions');
+      }
+    } catch (err) {
+      console.error("Lead capture/verification failed", err);
+      setVerificationError("Connection error. Please try again.");
+      setIsVerifying(false);
+    }
+  };
+
+  const handleDirectOnboard = async () => {
+    trackEvent('attempt_direct_onboard', { programSlug: manualProgram.slug, email: user.email });
+
+    try {
+      const res = await fetch('/api/direct-onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          phone: user.phone,
+          programSlug: manualProgram.slug
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Setup failed. Please try again.");
+      }
+
+      trackEvent('complete_direct_onboard', { status: 'success' });
+      setStep('direct_success');
+    } catch (err) {
+      console.error("Direct onboard failed", err);
+      throw err;
     }
   };
 
@@ -331,15 +393,15 @@ function App() {
     if (step === 'program_selection') {
       setStep('welcome');
     } else if (step === 'lead_capture') {
-      if (flowType === 'manual') {
+      if (flowType === 'manual' || flowType === 'direct') {
         // If they came from program selection, go back there
-        // BUT they might have come directly if we change logic, 
-        // strictly speaking for manual flow it is program_selection -> lead_capture
         setStep('program_selection');
       } else {
         // For quiz flow, it's welcome -> lead_capture
         setStep('welcome');
       }
+    } else if (step === 'direct_confirmation') {
+      setStep('lead_capture');
     } else if (step === 'questions') {
       if (currentQuestionIndex > 0) {
         setCurrentQuestionIndex(prev => prev - 1);
@@ -376,6 +438,8 @@ function App() {
       case 'program_selection':
       case 'results':
       case 'welcome':
+        return '1200px';
+      case 'direct_success':
         return '1200px';
       case 'stats':
         return '100%';
@@ -464,7 +528,9 @@ function App() {
         <LeadCapture
           onNext={handleLeadCapture}
           onBack={handleBack}
-          submitLabel={flowType === 'manual' ? "Start 7 Day Trial" : "Begin Assessment"}
+          submitLabel={isVerifying ? "Verifying..." : (flowType === 'manual' ? "Continue to Program" : "Begin Assessment")}
+          error={verificationError}
+          isLoading={isVerifying}
         />
       )}
 
@@ -526,6 +592,42 @@ function App() {
       {step === 'results' && recommendations && (
         <div style={{ width: '100%' }}>
           <ProgramPodium recommendations={recommendations} user={user} />
+        </div>
+      )}
+
+      {step === 'direct_confirmation' && (
+        <ProgramConfirmation
+          program={manualProgram}
+          user={user}
+          onConfirm={handleDirectOnboard}
+          onBack={handleBack}
+        />
+      )}
+
+      {step === 'direct_success' && (
+        <div className="glass-card fade-in-up" style={{
+          padding: '64px',
+          textAlign: 'center',
+          width: '100%',
+          maxWidth: '600px',
+          margin: '0 auto'
+        }}>
+          <h2 style={{
+            fontSize: '32px',
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 800,
+            marginBottom: '16px',
+            color: 'var(--color-text-primary)'
+          }}>
+            Setup Complete!
+          </h2>
+          <p style={{
+            fontSize: '18px',
+            color: 'var(--color-text-secondary)',
+            lineHeight: '1.6'
+          }}>
+            We've successfully set you up. You'll receive an email shortly with your Trainerize login details. Get ready to transform!
+          </p>
         </div>
       )}
 

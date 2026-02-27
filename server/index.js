@@ -7,7 +7,7 @@ const { createClient, activateProgram, deactivateClient } = require('./services/
 const { syncContact, manageTags, updatePipelineStage } = require('./services/ghl');
 const { sendEvent } = require('./services/meta');
 const db = require('./db');
-
+const PROGRAM_MAPPING = require('./config/programs');
 // ... (rest of imports)
 
 // ... inside handleNewSubscription ...
@@ -320,6 +320,100 @@ app.post('/api/activate-program', async (req, res) => {
     }
 });
 
+// 1.3 Direct Onboard (No Stripe check)
+app.post('/api/direct-onboard', async (req, res) => {
+    const { email, programSlug, firstName, lastName, phone } = req.body;
+
+    if (!email || !programSlug) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        console.log(`[Direct Onboard] 🚀 START: ${email} for ${programSlug}`);
+        const key = email.toLowerCase().trim();
+
+        // 1. Save lead to DB initially
+        await db.query(
+            `INSERT INTO leads (email, program_slug, first_name, last_name, phone, status, updated_at)
+             VALUES ($1, $2, $3, $4, $5, 'active', NOW())
+             ON CONFLICT (email)
+             DO UPDATE SET 
+                program_slug = EXCLUDED.program_slug,
+                first_name = COALESCE(leads.first_name, EXCLUDED.first_name),
+                last_name = COALESCE(leads.last_name, EXCLUDED.last_name),
+                phone = COALESCE(leads.phone, EXCLUDED.phone),
+                status = 'active',
+                updated_at = NOW()`,
+            [key, programSlug, firstName, lastName, phone]
+        );
+
+        // 2. Meta CAPI (Lead)
+        await sendEvent('Lead', {
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            phone: phone,
+        }, {
+            content_name: programSlug,
+            status: 'potential'
+        });
+
+        // 3. GHL Sync
+        let ghlContactId = null;
+        try {
+            console.log(`[Direct Onboard] Syncing ${email} to GHL...`);
+            ghlContactId = await syncContact({
+                email,
+                firstName,
+                lastName,
+                phone,
+                programSlug
+            });
+
+            if (ghlContactId) {
+                await manageTags(ghlContactId, ['Lead Captured', 'Direct Onboard']);
+                await updatePipelineStage(ghlContactId, 'Filled Out Funnel', 'open', `Direct: ${programSlug}`);
+                await db.query('UPDATE leads SET ghl_contact_id = $1 WHERE email = $2', [ghlContactId, key]);
+                console.log(`[Direct Onboard] ✅ Synced to GHL: ${ghlContactId}`);
+            }
+        } catch (ghlError) {
+            console.error("[Direct Onboard] ⚠️ GHL Sync failed:", ghlError.message);
+        }
+
+        // 4. Trainerize Sync
+        let trainerizeId = null;
+        try {
+            const programId = PROGRAM_MAPPING[programSlug];
+            console.log(`[Direct Onboard] ⏳ Creating Client with program ${programId || 'none'}...`);
+
+            const client = await createClient(
+                { email, first_name: firstName, last_name: lastName, phone },
+                programId
+            );
+            trainerizeId = client.userID || client.id;
+
+            if (trainerizeId && programId && client.code !== '0') {
+                console.log(`[Direct Onboard] Existing user, assigning program ${programId} separately...`);
+                await activateProgram(trainerizeId, programId);
+            }
+
+            if (trainerizeId) {
+                await db.query('UPDATE leads SET trainerize_id = $1 WHERE email = $2', [trainerizeId, key]);
+                console.log(`[Direct Onboard] ✅ Successfully onboarded ${email} to Trainerize`);
+            }
+        } catch (error) {
+            console.error("[Direct Onboard] ❌ Trainerize Sync FAILED:", error.message);
+        }
+
+        console.log(`[Direct Onboard] ✅ SUCCESS: ${email}`);
+        res.json({ success: true, message: "Program activated successfully!" });
+
+    } catch (error) {
+        console.error('[Direct Onboard] ❌ FAILED:', error);
+        res.status(500).json({ error: "Failed to direct onboard program" });
+    }
+});
+
 // 1.5 Tracking Endpoint
 app.post('/api/track', async (req, res) => {
     const { sessionId, eventType, eventData, url } = req.body;
@@ -542,8 +636,6 @@ app.post('/api/webhooks/stripe', bodyParser.raw({ type: 'application/json' }), a
 });
 
 // --- Handlers ---
-
-const PROGRAM_MAPPING = require('./config/programs');
 
 // --- Helper: Deactivate User from Stripe Reference ---
 async function deactivateUserFromStripeReference(stripeCustomerId, userEmail, context = 'Deactivation') {
