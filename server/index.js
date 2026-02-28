@@ -18,7 +18,7 @@ const PROGRAM_MAPPING = require('./config/programs');
 const app = express();
 console.log('--- SERVER RESTARTED WITH NODEMAILER ---', new Date().toISOString());
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-const PORT = 8080; // Hardcoded per user request to match Railway Proxy rule
+const PORT = process.env.PORT || 8080;
 
 // Check for critical env vars
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -1070,8 +1070,8 @@ app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT} at 0.0.0.0`);
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
 
 module.exports = {
