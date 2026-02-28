@@ -58,7 +58,7 @@ async function syncContact(userData) {
         firstName: userData.firstName,
         lastName: userData.lastName,
         phone: userData.phone,
-        locationId: config.locationId,
+        locationId: process.env.GHL_LOCATION_ID || config.locationId,
         customFields: customFields,
         tags: initialTags
     };
@@ -124,7 +124,7 @@ async function updatePipelineStage(contactId, stageName, status = 'open', opport
         const search = await axios.get(`${BASE_URL}/opportunities/search`, {
             headers: HEADERS,
             params: {
-                location_id: config.locationId,
+                location_id: process.env.GHL_LOCATION_ID || config.locationId,
                 contact_id: contactId,
                 pipeline_id: config.pipeline.id,
                 status: 'open' // Look for open ones first
@@ -144,7 +144,7 @@ async function updatePipelineStage(contactId, stageName, status = 'open', opport
         status: status,
         name: opportunityName || "Barn Community Membership",
         contactId: contactId,
-        locationId: config.locationId
+        locationId: process.env.GHL_LOCATION_ID || config.locationId
     };
 
     try {

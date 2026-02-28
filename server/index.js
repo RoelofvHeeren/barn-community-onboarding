@@ -332,6 +332,17 @@ app.post('/api/direct-onboard', async (req, res) => {
         console.log(`[Direct Onboard] 🚀 START: ${email} for ${programSlug}`);
         const key = email.toLowerCase().trim();
 
+        // 0. Check Circle Community Validation
+        const { circleService } = require('./services/circle');
+        const circleMember = await circleService.searchMember(key);
+        if (!circleMember) {
+            console.log(`[Direct Onboard] ⚠️ Circle validation failed: ${key} not found.`);
+            return res.status(403).json({
+                error: "Community membership not found.",
+                requireCircle: true
+            });
+        }
+
         // 1. Save lead to DB initially
         await db.query(
             `INSERT INTO leads (email, program_slug, first_name, last_name, phone, status, updated_at)

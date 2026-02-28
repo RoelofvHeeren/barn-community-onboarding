@@ -10,7 +10,11 @@ const ProgramConfirmation = ({ program, user, onConfirm, onBack }) => {
         try {
             await onConfirm();
         } catch (err) {
-            setError(err.message || 'Something went wrong. Please try again.');
+            if (err.requireCircle) {
+                setError('require_circle');
+            } else {
+                setError(err.message || 'Something went wrong. Please try again.');
+            }
             setIsLoading(false);
         }
     };
@@ -74,7 +78,29 @@ const ProgramConfirmation = ({ program, user, onConfirm, onBack }) => {
                 {program.tagline || 'Get ready to transform your performance and build real strength.'}
             </p>
 
-            {error && (
+            {error === 'require_circle' ? (
+                <div style={{
+                    background: 'rgba(255, 170, 0, 0.1)',
+                    padding: '24px',
+                    borderRadius: '12px',
+                    marginBottom: '32px',
+                    border: '1px solid rgba(255, 170, 0, 0.3)'
+                }}>
+                    <h3 style={{ color: '#d97706', marginBottom: '8px', fontSize: '18px' }}>Community Account Required</h3>
+                    <p style={{ color: 'var(--color-text-secondary)', marginBottom: '16px', fontSize: '15px' }}>
+                        We couldn't find a Barn Community membership for this email. Please make sure you are using the same email you used to sign up.
+                    </p>
+                    <a
+                        href="https://barn-community-f2a4b1.circle.so/join?invitation_token=5bdb9d675cfc4796c495f9af565fbc5442d7c9f3-e1a35338-e720-4c78-be1e-d7947088a781"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary"
+                        style={{ display: 'inline-block', textDecoration: 'none', width: 'auto', padding: '12px 24px' }}
+                    >
+                        Join the Community First
+                    </a>
+                </div>
+            ) : error ? (
                 <p style={{
                     color: '#ff4d4d',
                     background: 'rgba(255, 77, 77, 0.1)',
@@ -84,7 +110,7 @@ const ProgramConfirmation = ({ program, user, onConfirm, onBack }) => {
                 }}>
                     {error}
                 </p>
-            )}
+            ) : null}
 
             <button
                 onClick={handleConfirm}

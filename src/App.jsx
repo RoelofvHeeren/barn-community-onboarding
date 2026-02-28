@@ -360,7 +360,9 @@ function App() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Setup failed. Please try again.");
+        const error = new Error(data.error || "Setup failed. Please try again.");
+        if (data.requireCircle) error.requireCircle = true;
+        throw error;
       }
 
       trackEvent('complete_direct_onboard', { status: 'success' });
