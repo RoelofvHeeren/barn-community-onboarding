@@ -1062,6 +1062,10 @@ async function handleSubscriptionCancelled(subscription) {
 
 
 // 3. Catch-all: Serve React App for any other route
+app.get('/programs', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
 app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
