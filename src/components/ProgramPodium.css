@@ -421,8 +421,8 @@
 }
 
 .modal-body {
-  padding: 0 40px 100px;
-  /* Bottom padding for fixed footer if needed */
+  padding: 0 40px 60px;
+  /* Reduced bottom padding to bring button higher */
   max-width: 700px;
   margin: 0 auto;
 }
@@ -557,8 +557,32 @@
   }
 
   .modal-content {
-    height: 100vh;
-    border-radius: 0;
+    height: auto;
+    max-height: 85vh;
+    /* Keep it off the very bottom/top to avoid Safari bars */
+    border-radius: 20px;
+    width: calc(100% - 32px);
+    margin: 16px;
+  }
+
+  .modal-image-hero {
+    height: 240px;
+    /* Slightly shorter on mobile */
+  }
+
+  .modal-header h2 {
+    padding: 24px 20px 0 20px;
+    /* Reduced padding */
+    font-size: 28px;
+  }
+
+  .modal-tagline {
+    padding: 0 20px;
+  }
+
+  .modal-body {
+    padding: 0 20px 40px;
+    /* Tighter padding for mobile */
   }
 
   .program-selector-grid {

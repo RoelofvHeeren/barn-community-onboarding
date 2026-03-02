@@ -27,21 +27,9 @@ const ProgramModal = ({ program, onClose, onSelect }) => {
 
                     <div className="modal-body">
                         <div className="modal-section">
-                            <h3>Why this fits you</h3>
+                            <h3>Program Overview</h3>
                             <p>{program.reason}</p>
                         </div>
-
-                        {program.specs && (
-                            <div className="modal-section specs-section">
-                                <h3>Program Specs</h3>
-                                <div className="specs-list">
-                                    <SpecRow label="Frequency" value={program.specs.frequency} />
-                                    <SpecRow label="Duration" value={program.specs.duration} />
-                                    <SpecRow label="Intensity" value={program.specs.intensity} />
-                                    <SpecRow label="Focus" value={program.specs.focus} />
-                                </div>
-                            </div>
-                        )}
 
                         <div className="modal-section">
                             <h3>Key Benefits</h3>
