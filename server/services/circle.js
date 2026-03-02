@@ -88,9 +88,15 @@ const circleService = {
             const response = await axiosInstance.get('/community_members/search', {
                 params: { query: email, community_id: 378435 }
             });
-            // The search returns an ARRAY of members
-            const members = response.data;
-            return members.find(m => m.email.toLowerCase() === email.toLowerCase());
+            // The search might return an array directly, or embed it in an object
+            let members = [];
+            if (Array.isArray(response.data)) members = response.data;
+            else if (Array.isArray(response.data?.records)) members = response.data.records;
+            else if (Array.isArray(response.data?.members)) members = response.data.members;
+            else if (Array.isArray(response.data?.data)) members = response.data.data;
+            else if (Array.isArray(response.data?.results)) members = response.data.results;
+
+            return members.find(m => m.email && m.email.toLowerCase() === email.toLowerCase());
         } catch (error) {
             console.error(`Error searching member ${email}:`, error.response?.data || error.message);
             return null;
