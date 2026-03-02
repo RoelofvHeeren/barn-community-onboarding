@@ -73,7 +73,7 @@ export const PROGRAMS = [
         name: "Kettlebell Program",
         description: "Build a strong, functional body with minimal equipment. This program uses kettlebells to develop strength, power, muscle, and conditioning, perfect for home or gym training.\n\nWhat it focuses on:\n- Full body functional strength\n- Power and conditioning\n- Simple but effective training",
         slug: "kettlebell-program",
-        tagline: "Train for performance, not just aesthetics.",
+        tagline: "Build a strong, functional body with minimal equipment.",
         specs: {
             frequency: "3-4 days/week",
             duration: "30-45 mins",
@@ -81,9 +81,9 @@ export const PROGRAMS = [
             focus: "Functional Strength"
         },
         bullets: [
-            "Power, speed, and agility focus",
-            "Strength and conditioning combined",
-            "Builds power and conditioning"
+            "Master kettlebell mechanics",
+            "Develop explosive power",
+            "Perfect for home or gym training"
         ]
     },
     {
@@ -107,7 +107,7 @@ export const PROGRAMS = [
         name: "Bodyweight Program",
         description: "Get in great shape without a gym. This program uses bodyweight training to build strength, control, and conditioning using just your own body.\n\nWhat it focuses on:\n- No equipment needed\n- Full body strength and conditioning\n- Train anywhere, anytime",
         slug: "bodyweight",
-        tagline: "Train for performance, not just aesthetics.",
+        tagline: "Get in great shape using just your own body.",
         specs: {
             frequency: "3-5 days/week",
             duration: "20-40 mins",
@@ -115,16 +115,16 @@ export const PROGRAMS = [
             focus: "Body Control"
         },
         bullets: [
-            "Power, speed, and agility focus",
-            "Strength and conditioning combined",
-            "Train anywhere, anytime"
+            "No gym equipment required",
+            "Master bodyweight control and mechanics",
+            "High-intensity conditioning anywhere"
         ]
     },
     {
         name: "Functional Bodybuilding",
         description: "Build muscle that actually performs. Functional Bodybuilding combines traditional lifting with functional movements so you look good and move well.\n\nWhat it focuses on:\n- Muscle building with purpose\n- Barbells, dumbbells, and kettlebells\n- Strength that carries into daily life",
         slug: "functional-bodybuilding",
-        tagline: "Train for performance, not just aesthetics.",
+        tagline: "Build muscle that actually performs in real life.",
         specs: {
             frequency: "3 days/week",
             duration: "45 mins",
@@ -132,16 +132,16 @@ export const PROGRAMS = [
             focus: "Mobility & Strength"
         },
         bullets: [
-            "Muscle building with purpose",
-            "Kettlebells, barbells, and dumbbells",
-            "Strength that transfers to real life"
+            "Muscle building with intention",
+            "Mixes barbells, dumbbells, and kettlebells",
+            "Improves joint health and mobility"
         ]
     },
     {
         name: "Athlete Program",
         description: "Train for performance, not just aesthetics. Designed for advanced trainees who want to improve power, speed, agility, strength, and conditioning.\n\nWhat it focuses on:\n- Power, speed, and agility\n- High-level strength training\n- Athletic performance development",
         slug: "athlete-program",
-        tagline: "Train for performance, not just aesthetics.",
+        tagline: "Elite training for top-tier athletic performance.",
         specs: {
             frequency: "4 days/week",
             duration: "60-75 mins",
@@ -149,9 +149,9 @@ export const PROGRAMS = [
             focus: "Strength & Conditioning"
         },
         bullets: [
-            "Power, speed, and agility focus",
-            "High-level strength training",
-            "Athletic performance development"
+            "Advanced power and speed development",
+            "High-level agility and conditioning",
+            "Designed for competitive trainees"
         ]
     },
 
