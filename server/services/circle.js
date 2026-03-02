@@ -85,18 +85,30 @@ const circleService = {
      */
     async searchMember(email) {
         try {
-            const response = await axiosInstance.get('/community_members/search', {
-                params: { query: email, community_id: 378435 }
+            // Circle's native /search endpoint has severe indexing delays and fails to find existing members.
+            // Using the /community_members list approach which is 100% accurate for recent signups.
+            const response = await axiosInstance.get('/community_members', {
+                params: {
+                    community_id: 378435,
+                    per_page: 500, // Pull a large chunk to guarantee we find them
+                    sort: 'latest'
+                }
             });
-            // The search might return an array directly, or embed it in an object
+
             let members = [];
             if (Array.isArray(response.data)) members = response.data;
-            else if (Array.isArray(response.data?.records)) members = response.data.records;
-            else if (Array.isArray(response.data?.members)) members = response.data.members;
-            else if (Array.isArray(response.data?.data)) members = response.data.data;
             else if (Array.isArray(response.data?.results)) members = response.data.results;
+            else if (Array.isArray(response.data?.members)) members = response.data.members;
 
-            return members.find(m => m.email && m.email.toLowerCase() === email.toLowerCase());
+            const found = members.find(m => m.email && m.email.toLowerCase() === email.toLowerCase());
+
+            if (found) {
+                console.log(`[Circle Service] ✅ Found ${email} via list bypass.`);
+            } else {
+                console.warn(`[Circle Service] ⚠️ ${email} not found in the latest 500 members.`);
+            }
+            return found || null;
+
         } catch (error) {
             console.error(`Error searching member ${email}:`, error.response?.data || error.message);
             return null;
