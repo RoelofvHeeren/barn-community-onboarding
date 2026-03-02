@@ -503,8 +503,31 @@
   filter: brightness(0.9);
 }
 
+.success-message {
+  color: var(--success-green);
+  font-weight: 600;
+  padding: 16px;
+  background: rgba(52, 199, 89, 0.1);
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.activation-error {
+  color: #ff4d4d;
+  font-size: 14px;
+  margin-top: 12px;
+  font-weight: 500;
+}
+
 /* MOBILE Styles */
 @media (max-width: 1023px) {
+  .podium-page-container {
+    margin: 6px auto 40px;
+    width: calc(100% - 12px);
+    padding: 40px 16px 60px;
+    border-radius: 24px;
+  }
+
   .primary-heading {
     font-size: 32px;
   }
@@ -541,6 +564,7 @@
   .program-selector-grid {
     grid-template-columns: 1fr !important;
     gap: 24px;
+    padding: 0 6px !important;
   }
 }
 
