@@ -531,7 +531,7 @@ function App() {
         <LeadCapture
           onNext={handleLeadCapture}
           onBack={handleBack}
-          submitLabel={isVerifying ? "Verifying..." : (flowType === 'manual' ? "Continue to Program" : "Begin Assessment")}
+          submitLabel={isVerifying ? "Verifying..." : (flowType === 'direct' ? "Start Program" : (flowType === 'manual' ? "Continue to Program" : "Begin Assessment"))}
           error={verificationError}
           isLoading={isVerifying}
         />
