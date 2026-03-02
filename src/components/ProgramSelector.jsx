@@ -1,7 +1,73 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './ProgramPodium.css'; // Reuse existing styles for consistency
 
-const ProgramCard = ({ program, onSelect }) => {
+const SpecRow = ({ icon, label, value }) => (
+    <div className="spec-item">
+        <span className="spec-label">{label}</span>
+        <span className="spec-value">{value}</span>
+    </div>
+);
+
+const ProgramModal = ({ program, onClose, onSelect }) => {
+    if (!program) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <button className="close-btn" onClick={onClose}>×</button>
+
+                <div className="modal-scroll">
+                    <div className="modal-header">
+                        <div className="modal-image-hero">
+                            <img src={`/programs/${program.slug}.png`} alt={program.name} />
+                        </div>
+                        <h2>{program.name}</h2>
+                        <p className="modal-tagline">{program.tagline}</p>
+                    </div>
+
+                    <div className="modal-body">
+                        <div className="modal-section">
+                            <h3>Why this fits you</h3>
+                            <p>{program.reason}</p>
+                        </div>
+
+                        {program.specs && (
+                            <div className="modal-section specs-section">
+                                <h3>Program Specs</h3>
+                                <div className="specs-list">
+                                    <SpecRow label="Frequency" value={program.specs.frequency} />
+                                    <SpecRow label="Duration" value={program.specs.duration} />
+                                    <SpecRow label="Intensity" value={program.specs.intensity} />
+                                    <SpecRow label="Focus" value={program.specs.focus} />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="modal-section">
+                            <h3>Key Benefits</h3>
+                            <ul className="benefits-list">
+                                {program.bullets && program.bullets.map((b, i) => (
+                                    <li key={i}>{b}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="modal-footer">
+                        <button
+                            className="join-modal-btn"
+                            onClick={() => { onClose(); onSelect(program); }}
+                        >
+                            Select This Program
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ProgramCard = ({ program, onSelect, onLearnMore }) => {
     return (
         <div
             className="podium-card secondary"
@@ -32,15 +98,39 @@ const ProgramCard = ({ program, onSelect }) => {
                     </div>
                 )}
 
-                <button className="view-program-btn">
-                    Select This Program
-                </button>
+                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                    <button
+                        className="view-program-btn"
+                        style={{ flex: 1, background: '#E8E8ED', color: '#1D1D1F' }}
+                        onClick={(e) => { e.stopPropagation(); onLearnMore(program); }}
+                    >
+                        Learn More
+                    </button>
+                    <button
+                        className="view-program-btn"
+                        style={{ flex: 1 }}
+                        onClick={(e) => { e.stopPropagation(); onSelect(program); }}
+                    >
+                        Select
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
 
 const ProgramSelector = ({ programs, onSelect, onBack }) => {
+    const [selectedProgram, setSelectedProgram] = useState(null);
+
+    // Prevent scrolling when modal is open
+    React.useEffect(() => {
+        if (selectedProgram) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+    }, [selectedProgram]);
+
     return (
         <div className="podium-page-container">
             <header className="results-header" style={{ position: 'relative' }}>
@@ -80,9 +170,16 @@ const ProgramSelector = ({ programs, onSelect, onBack }) => {
                         key={program.slug}
                         program={program}
                         onSelect={onSelect}
+                        onLearnMore={setSelectedProgram}
                     />
                 ))}
             </section>
+
+            <ProgramModal
+                program={selectedProgram}
+                onClose={() => setSelectedProgram(null)}
+                onSelect={onSelect}
+            />
         </div>
     );
 };

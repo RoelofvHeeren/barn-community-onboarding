@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const LeadCapture = ({ onNext, onBack, submitLabel = "Begin Assessment" }) => {
+const LeadCapture = ({ onNext, onBack, submitLabel = "Begin Assessment", error, isLoading }) => {
     const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '' });
 
     const handleSubmit = (e) => {
@@ -26,8 +26,8 @@ const LeadCapture = ({ onNext, onBack, submitLabel = "Begin Assessment" }) => {
                     onClick={onBack}
                     style={{
                         position: 'absolute',
-                        left: '24px',
-                        top: '24px',
+                        left: '16px',
+                        top: '16px',
                         background: 'transparent',
                         border: 'none',
                         color: 'var(--color-text-tertiary)',
@@ -175,6 +175,20 @@ const LeadCapture = ({ onNext, onBack, submitLabel = "Begin Assessment" }) => {
                     }}>
                         ⚠️ Important: Please use the email you will use for your membership.
                     </p>
+                    {error && (
+                        <p style={{
+                            marginTop: '12px',
+                            fontSize: '14px',
+                            color: '#ff4d4d',
+                            background: 'rgba(255, 77, 77, 0.1)',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            textAlign: 'left',
+                            fontWeight: 500
+                        }}>
+                            ❌ {error}
+                        </p>
+                    )}
                 </div>
 
                 <div style={{ textAlign: 'left' }}>
@@ -210,9 +224,12 @@ const LeadCapture = ({ onNext, onBack, submitLabel = "Begin Assessment" }) => {
                 <button
                     type="submit"
                     className="btn-primary"
+                    disabled={isLoading}
                     style={{
                         marginTop: '16px',
-                        padding: '20px'
+                        padding: '20px',
+                        opacity: isLoading ? 0.7 : 1,
+                        cursor: isLoading ? 'not-allowed' : 'pointer'
                     }}
                 >
                     {submitLabel}
