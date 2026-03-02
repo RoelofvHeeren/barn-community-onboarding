@@ -28,7 +28,11 @@ const ProgramModal = ({ program, onClose, onSelect }) => {
                     <div className="modal-body">
                         <div className="modal-section">
                             <h3>Program Overview</h3>
-                            <p>{program.reason}</p>
+                            <p>
+                                {program.description
+                                    ? program.description.split('\n\n')[0]
+                                    : (program.reason !== "General recommendation." ? program.reason : program.tagline)}
+                            </p>
                         </div>
 
                         <div className="modal-section">
