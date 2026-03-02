@@ -90,7 +90,7 @@ const circleService = {
             const response = await axiosInstance.get('/community_members', {
                 params: {
                     community_id: 378435,
-                    per_page: 500, // Pull a large chunk to guarantee we find them
+                    per_page: 100, // Reduced from 500 to prevent potential API truncation
                     sort: 'latest'
                 }
             });
@@ -100,6 +100,7 @@ const circleService = {
             else if (Array.isArray(response.data?.results)) members = response.data.results;
             else if (Array.isArray(response.data?.members)) members = response.data.members;
 
+            console.log(`[Circle Service] Pulled ${members.length} recent members for manual search.`);
             const found = members.find(m => m.email && m.email.toLowerCase() === email.toLowerCase());
 
             if (found) {
