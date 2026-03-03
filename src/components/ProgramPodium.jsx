@@ -40,7 +40,7 @@ const PodiumCard = ({ program, rank, onClick, isMobile }) => {
             {/* Image (Placed top for visual balance, though user listed text hierarchy first, images are crucial for "Product Box" feel) */}
             <div className="card-image-container">
                 <img
-                    src={`/programs/${program.slug}.png`}
+                    src={`/programs/${program.slug}.jpg`}
                     alt={program.program}
                     className="card-image"
                     onError={(e) => {
@@ -78,7 +78,7 @@ const PodiumCard = ({ program, rank, onClick, isMobile }) => {
 const OtherProgramRow = ({ program, onClick }) => (
     <div className="other-program-row" onClick={() => onClick(program)}>
         <div className="row-image">
-            <img src={`/programs/${program.slug}.png`} alt={program.program} />
+            <img src={`/programs/${program.slug}.jpg`} alt={program.program} />
         </div>
         <div className="row-content">
             <h4 className="row-title">{program.program}</h4>
@@ -99,7 +99,7 @@ const ProgramModal = ({ program, onClose, onJoin }) => {
                 <div className="modal-scroll">
                     <div className="modal-header">
                         <div className="modal-image-hero">
-                            <img src={`/programs/${program.slug}.png`} alt={program.program} />
+                            <img src={`/programs/${program.slug}.jpg`} alt={program.program} />
                         </div>
                         <h2>{program.program}</h2>
                         <p className="modal-tagline">{program.tagline}</p>
@@ -134,9 +134,28 @@ const ProgramModal = ({ program, onClose, onJoin }) => {
                     </div>
 
                     <div className="modal-footer">
-                        <button className="join-modal-btn" onClick={() => onJoin(program)}>
-                            Start with this program
-                        </button>
+                        {isSuccess ? (
+                            <div className="success-message">
+                                ✅ Program activated! Redirecting to community...
+                            </div>
+                        ) : (
+                            <>
+                                <button
+                                    className="join-modal-btn"
+                                    onClick={() => onJoin(program)}
+                                    disabled={isActivating}
+                                    style={{
+                                        opacity: isActivating ? 0.7 : 1,
+                                        cursor: isActivating ? 'not-allowed' : 'pointer'
+                                    }}
+                                >
+                                    {isActivating ? 'Activating...' : 'Start with this program'}
+                                </button>
+                                {activationError && (
+                                    <p className="activation-error">❌ {activationError}</p>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -160,6 +179,9 @@ const ProgramPodium = ({ recommendations, user }) => {
 
     const [selectedProgram, setSelectedProgram] = useState(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [isActivating, setIsActivating] = useState(false);
+    const [activationError, setActivationError] = useState(null);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -182,14 +204,17 @@ const ProgramPodium = ({ recommendations, user }) => {
     }, [selectedProgram]);
 
     const handleJoin = async (program) => {
-        // Track the checkout click
+        setIsActivating(true);
+        setActivationError(null);
+
+        // Track the activation attempt
         try {
             await fetch('/api/track', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    sessionId: user?.sessionId || 'unknown', // We need to pass sessionId from App.jsx or context
-                    eventType: 'click_checkout',
+                    sessionId: user?.sessionId || 'unknown',
+                    eventType: 'click_activate_program',
                     eventData: { programSlug: program.slug },
                     url: window.location.href
                 })
@@ -199,22 +224,43 @@ const ProgramPodium = ({ recommendations, user }) => {
         }
 
         try {
-            const leadData = {
+            const activationData = {
                 email: user?.email || '',
                 firstName: user?.firstName || '',
                 lastName: user?.lastName || '',
                 phone: user?.phone || '',
-                programSlug: program.slug,
-                fbc: getCookie('_fbc'),
-                fbp: getCookie('_fbp')
+                programSlug: program.slug
             };
-            await fetch('/api/save-lead', {
+
+            const response = await fetch('/api/activate-program', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(leadData)
+                body: JSON.stringify(activationData)
             });
-        } catch (e) { console.warn("Intent save failed", e); }
-        window.top.location.href = 'https://barn-community-f2a4b1.circle.so/checkout/barn-community-silver-membership';
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setActivationError(data.error || "Failed to activate program. Please contact support.");
+                setIsActivating(false);
+                return;
+            }
+
+            // Success
+            setIsSuccess(true);
+            setIsActivating(false);
+
+            // Optionally redirect or show success state for a few seconds
+            setTimeout(() => {
+                // Break out of iframe or redirect to Circle
+                window.top.location.href = 'https://barn-community-f2a4b1.circle.so/home';
+            }, 3000);
+
+        } catch (e) {
+            console.error("Activation failed", e);
+            setActivationError("Connection error. Please try again.");
+            setIsActivating(false);
+        }
     };
 
     return (
@@ -268,6 +314,9 @@ const ProgramPodium = ({ recommendations, user }) => {
                 program={selectedProgram}
                 onClose={() => setSelectedProgram(null)}
                 onJoin={handleJoin}
+                isActivating={isActivating}
+                activationError={activationError}
+                isSuccess={isSuccess}
             />
         </div>
     );

@@ -35,6 +35,15 @@ CREATE TABLE IF NOT EXISTS events (
     url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS circle_trials (
+    email VARCHAR(255) PRIMARY KEY,
+    circle_user_id VARCHAR(100),
+    start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_date TIMESTAMP,
+    status VARCHAR(50) DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 `;
 
 async function initDB() {

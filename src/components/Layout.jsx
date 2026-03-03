@@ -1,6 +1,6 @@
 import React from 'react';
 import logo from '../assets/logo.png';
-import background from '../assets/background.png';
+import background from '../assets/background.jpg';
 
 const Layout = ({ children, contentMaxWidth = '600px' }) => {
   return (
@@ -44,9 +44,9 @@ const Layout = ({ children, contentMaxWidth = '600px' }) => {
         }}>
           <img
             src={logo}
-            alt="Barn Gym"
+            alt="Barn Community"
             style={{
-              width: '80px',
+              width: '120px',
               height: 'auto'
             }}
           />

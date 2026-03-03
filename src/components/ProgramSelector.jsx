@@ -19,7 +19,7 @@ const ProgramModal = ({ program, onClose, onSelect }) => {
                 <div className="modal-scroll">
                     <div className="modal-header">
                         <div className="modal-image-hero">
-                            <img src={`/programs/${program.slug}.png`} alt={program.name} />
+                            <img src={`/programs/${program.slug}.jpg`} alt={program.name} />
                         </div>
                         <h2>{program.name}</h2>
                         <p className="modal-tagline">{program.tagline}</p>
@@ -68,7 +68,7 @@ const ProgramCard = ({ program, onSelect, onLearnMore }) => {
         >
             <div className="card-image-container">
                 <img
-                    src={`/programs/${program.slug}.png`}
+                    src={`/programs/${program.slug}.jpg`}
                     alt={program.name}
                     className="card-image"
                     onError={(e) => {

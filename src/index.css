@@ -37,7 +37,7 @@ body {
   /* Set a light background color to match the theme (dark text) */
   background-color: #f4f4f5;
   /* Load background image immediately via CSS */
-  background-image: url('./assets/background.png');
+  background-image: url('./assets/background.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;

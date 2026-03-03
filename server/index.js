@@ -22,6 +22,7 @@ app.use((req, res, next) => {
 });
 app.get('/ping', (req, res) => res.status(200).send('pong'));
 console.log('--- SERVER RESTARTED WITH NODEMAILER ---', new Date().toISOString());
+console.log('INTERNAL RAILWAY PORT INJECTED:', process.env.PORT);
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const PORT = process.env.PORT || 8080;
 
