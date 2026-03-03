@@ -315,7 +315,12 @@ app.post('/api/activate-program', async (req, res) => {
 
         // 3. Delegate to existing robust handler
         // handleNewSubscription takes care of Trainerize, GHL, Meta, Stripe Metadata and DB
-        await handleNewSubscription(pseudoSession);
+        const result = await handleNewSubscription(pseudoSession);
+
+        if (result && result.trainerizeExistsError) {
+            console.log(`[Activate Program] ❌ User already exists on Trainerize: ${email}`);
+            return res.status(409).json({ error: result.trainerizeExistsError });
+        }
 
         console.log(`[Activate Program] ✅ SUCCESS: ${email}`);
         res.json({ success: true, message: "Program activated successfully!" });
@@ -420,6 +425,18 @@ app.post('/api/direct-onboard', async (req, res) => {
             }
         } catch (error) {
             console.error("[Direct Onboard] ❌ Trainerize Sync FAILED:", error.message);
+
+            // Check if user already exists (Trainerize returns 406 for Email already taken)
+            const status = error.response?.status;
+            const code = error.response?.data?.code;
+            if (status === 406 || status === 409 || code === 1002) {
+                return res.status(409).json({
+                    error: "You're already on Trainerize. Please reach out to the coaches so that we can put you on a new plan."
+                });
+            }
+
+            // For other critical Trainerize errors, we might want to fail the onboard
+            return res.status(500).json({ error: "Failed to setup training account. Please contact support." });
         }
 
         console.log(`[Direct Onboard] ✅ SUCCESS: ${email}`);
@@ -769,6 +786,7 @@ async function handleNewSubscription(session) {
 
         let trainerizeId = null;
         let ghlContactId = null;
+        let trainerizeExistsError = null;
 
         // A. GoHighLevel Sync (Leads -> Trial)
         try {
@@ -844,6 +862,11 @@ async function handleNewSubscription(session) {
             }
         } catch (e) {
             console.error("[Trainerize Sync] ❌ FAILED:", e.message);
+            const status = e.response?.status;
+            const code = e.response?.data?.code;
+            if (status === 406 || status === 409 || code === 1002) {
+                trainerizeExistsError = "You're already on Trainerize. Please reach out to the coaches so that we can put you on a new plan.";
+            }
         }
 
         // C. Resilience: Store External IDs in Stripe Metadata & Local
@@ -888,6 +911,7 @@ async function handleNewSubscription(session) {
     }
 
     console.log(`[Stripe Handler] 🏁 END: finished processing for ${userEmail}`);
+    return { success: true, trainerizeExistsError };
 }
 
 // --- NEW: Handle customer.subscription.created (fallback for checkout.session.completed) ---
